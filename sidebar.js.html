@@ -1,0 +1,285 @@
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/highlight.min.js"></script>
+
+<script>
+var LANGUAGES = hljs.listLanguages();
+
+/**
+ * On document load, try to load languages and themes, try to load the
+ * user's preferences if previously set, and assign click handlers to each button.
+ */
+$(function() {
+  // register jquery outerHTML plugin
+  jQuery.fn.outerHTML = function() {
+    return jQuery('<div />').append(this.eq(0).clone()).html();
+  };
+
+  loadLanguages();
+  /*
+  google.script.run
+      .withFailureHandler(showErrorThemes)
+      .withSuccessHandler(
+          function(results, element) {
+            loadThemes(results, element);
+            
+            // only load preferences if getting themes is successful
+            // todo: try to get themes and prefs at same time
+            google.script.run
+                .withSuccessHandler(loadPreferences)
+                .getPreferences();
+          })
+      .getThemes();
+  */
+  
+  google.script.run
+      .withFailureHandler(showErrorThemes)
+      .withSuccessHandler(
+          function(result, element) {
+            loadThemes(result.themes);
+            loadPreferences(result.prefs, result.themes);
+          })
+      .getPreferencesAndThemes();
+
+  $('#highlight-selection').click(highlightSelection);
+  $('#show-preview').click(showPreview);
+  $('#insert-preview').click(insertPreview);
+});
+
+// callback function that populates language input options
+function loadLanguages() {
+  LANGUAGES.forEach(function(lang) {
+    $('#language').append('<option value="' + lang + '">' + lang + '</option>');
+  });
+}
+
+// callback function that populates theme input options
+function loadThemes(themes, prefs) {
+  var themeSelect = $('#theme');
+
+  // remove 'default', because its CSS is already in HTML as a fallback
+  var i = themes.indexOf('default');
+  if (i != -1) {
+    themes.splice(i, 1);
+  } 
+
+  for (var i = 0; i < themes.length; i++) {
+    var theme = themes[i];
+    themeSelect.append('<option value="' + theme + '">' + theme + '</option>');
+  }
+}
+
+/**
+ * Callback function that populates inputs elements with user preferences 
+ * from the server.
+ *
+ * @param {Object} prefs The saved preferences.
+ */
+function loadPreferences(prefs, themes) {
+//  console.log(LANGUAGES);
+//  console.log(themes);
+//  console.log(prefs);
+
+  if (prefs.language) {
+    var language = $('#language');
+    LANGUAGES.forEach(function(lang) {
+      if (lang === prefs.language) {
+        language.val(prefs.language);
+        return;
+      }
+    });
+  }
+  if (prefs.theme) {
+    var theme = $('#theme');
+    for (var i = 0; i < themes.length; i++) {
+      if (themes[i] === prefs.theme) {
+        theme.val(prefs.theme);
+        break;
+      }
+    }
+  }
+  if (prefs.noBackground === 'true') {
+    $('#no-background').prop('checked', true);
+  }
+
+  // enable forms
+  $('#language').prop('disabled', false);
+  $('#theme').prop('disabled', false);
+  $('#highlight-selection').prop('disabled', false);
+  $('#show-preview').prop('disabled', false);
+}
+
+// todo: unused
+// button function to toggle using spaces
+function toggleConvertTabs() {
+  var checked = $(this).is(':checked');
+  hljs.configure({'tabReplace': checked ? '  ' : null});
+}
+
+// button function to show code preview
+/**
+ * Runs a server-side function to translate the user-selected text and update
+ * the sidebar UI with the resulting translation.
+ */
+function showPreview() {
+  this.disabled = true;
+  $('#error').remove();
+
+  var language = $("#language option:selected").text();
+  var theme = $("#theme option:selected").text();
+  var noBackground = $('#no-background').is(':checked');
+
+  google.script.run
+      .withFailureHandler(showErrorPreviewButtons)
+      .withSuccessHandler(
+          function(result, element) {
+            var selection = result['selection'];
+            var css = result['css'];
+            renderPreview(selection, css, language, noBackground);
+
+            element.disabled = false;
+          })
+      .withUserObject(this)
+      .getSelectionAndThemeStyle(language, theme, noBackground);
+}
+
+// callback function render preview block
+function renderPreview(selection, css, language, noBackground) {
+  var highlighted = createHighlightedBlock(selection, css, language, noBackground);
+  $('#preview').replaceWith(highlighted);
+
+  $('#insert-preview').prop('disabled', false);
+}
+
+function createHighlightedBlock(text, css, language, noBackground) {
+  var preview = $('#preview');
+  var block = preview.clone();
+
+  block.removeClass();
+  block.removeAttr('style');
+  block.text(text);
+  if (language !== 'Auto') { // todo: to constant
+    block.addClass(language);
+  }
+  hljs.highlightBlock(block[0]); // todo: why [0]?
+
+  var highlighted = block.outerHTML();
+  if (css != null) {
+    highlighted = juice.inlineContent(highlighted, css);
+  }
+  
+  if (noBackground) {
+    resetBackground(highlighted);
+  }
+  
+  return highlighted;
+}
+
+/*
+// button function to clear preview
+function clearCode() {
+  this.disabled = true;
+  $('error').remove()
+  google.script.run
+      .withFailureHandler(showErrorPreviewButtons)
+      .withSuccessHandler(
+          function(result, element) {
+            var preview = $('#preview');
+            preview.empty();
+            resetBackground(preview);
+            $('#insert-code').prop('disabled', true);
+          }
+      )
+      .withUserObject(this)
+      .stub();
+}
+*/
+
+// button function to highlight selection
+function highlightSelection() {
+  this.disabled = true;
+  $('#error').remove();
+
+  var preview = $('#preview');
+  var language = $("#language option:selected").text();
+  var theme = $("#theme option:selected").text();
+  var noBackground = $('#no-background').is(':checked');
+
+  google.script.run
+      .withFailureHandler(showErrorHighlightButtons)
+      .withSuccessHandler(
+          function(result, element) {
+            var selection = result['selection'];
+            var css = result['css'];
+            var block = createHighlightedBlock(selection, css, language, noBackground);
+
+            google.script.run
+                .withFailureHandler(showErrorHighlightButtons)
+                .withSuccessHandler(focusEditor)
+                .withUserObject(element)
+                .insertCode(block, noBackground);
+          })
+      .withUserObject(this)
+      .getSelectionAndThemeStyle(language, theme, noBackground);
+}
+
+// button function to insert preview
+function insertPreview(element, noBackground) {
+  this.disabled = true;
+  $('#error').remove();
+
+  var noBackground = $('#no-background').is(':checked');
+  var html = $('#preview').outerHTML();
+
+  google.script.run
+      .withFailureHandler(showErrorHighlightButtons)
+      .withSuccessHandler(focusEditor)
+      .withUserObject(element)
+      .insertCode(html, noBackground);
+}
+
+// success/failure callbacks
+function defaultSuccess(result, element) {
+  element.disabled = false;
+}
+
+function focusEditor(result, element) {
+  google.script.host.editor.focus();
+  element.disabled = false;
+}
+
+function showErrorThemes(msg, element) {
+  showError(msg, $('#themes'));
+//  element.disabled = false;
+
+  // enable other forms even if getting themes fails
+  $('#language').prop('disabled', false);
+  $('#theme').prop('disabled', false);
+  $('#highlight-selection').prop('disabled', false);
+  $('#show-preview').prop('disabled', false);
+}
+
+function showErrorPreviewButtons(msg, element) {
+  showError(msg, $('#preview-buttons'));
+  element.disabled = false;
+}
+
+function showErrorHighlightButtons(msg, element) {
+  showError(msg, $('#insert-buttons'));
+  element.disabled = false;
+}
+
+function resetBackground(element) {
+  element.css('background', '#f0f0f0');
+}
+
+/**
+ * Inserts a div that contains an error message after a given element.
+ *
+ * @param msg The error message to display.
+ * @param element The element after which to display the error.
+ */
+function showError(msg, element) {
+  var div = $('<div id="error" class="error">' + msg + '</div>');
+  $(element).after(div);
+}
+</script>
