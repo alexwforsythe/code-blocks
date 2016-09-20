@@ -223,7 +223,7 @@ function highlightSelection() {
 }
 
 // button function to insert preview
-function insertPreview(element, noBackground) {
+function insertPreview() {
   this.disabled = true;
   $(ID_ERROR).remove();
 
@@ -233,7 +233,7 @@ function insertPreview(element, noBackground) {
   google.script.run
       .withFailureHandler(showErrorHighlightButtons)
       .withSuccessHandler(focusEditor)
-      .withUserObject(element)
+      .withUserObject(this)
       .insertCode(html, noBackground);
 }
 
