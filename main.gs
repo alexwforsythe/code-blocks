@@ -23,6 +23,7 @@ var KEY_THEME_URLS = 'theme_urls';
 var ERR_FAILED_TO_INSERT = "Can't to insert here.";
 var ERR_GETTING_USER_PREFERENCES = "Couldn't get user preferences.";
 var ERR_GETTING_THEMES = "Couldn't get themes.";
+var ERR_THEME_NOT_FOUND = "Couldn't get theme.";
 
 /**
  * @OnlyCurrentDoc
@@ -227,16 +228,11 @@ function getSelectionAndThemeStyle(language, theme, noBackground) {
   // prepend default css for other themes
   var themeUrl;
   if (theme !== THEME_DEFAULT) {
-    themeUrl = scriptCache.get(THEME_DEFAULT);
-    if (themeUrl !== null) {
-      Logger.log('default theme url: %s', themeUrl);
-      result.css += getThemeStyle(themeUrl);
-    }
+    themeUrl = getThemeUrl(THEME_DEFAULT);
+    result.css += getThemeStyle(themeUrl);
   }
-  themeUrl = scriptCache.get(theme);
-  if (themeUrl !== null) {
-    result.css = getThemeStyle(themeUrl);
-  }
+  themeUrl = getThemeUrl(theme);
+  result.css = getThemeStyle(themeUrl);
 
   var text = getSelectedText();
   selection = text.join('\n');
@@ -245,6 +241,30 @@ function getSelectionAndThemeStyle(language, theme, noBackground) {
   Logger.log('returning result:\n%s', result);
 
   return result;
+}
+
+function getThemeUrl(theme) {
+  Logger.log('getting theme url for theme: %s', theme);
+
+  var scriptCache = CacheService.getScriptCache();
+  var themeUrl = scriptCache.get(theme);
+  if (themeUrl !== null) {
+    Logger.log('found it: %s', themeUrl);
+    return themeUrl;
+  }
+
+  Logger.log('not found, try fetching urls again');
+  // themeUrls might have expired, try fetching them again
+  getThemes();
+
+  // try looking it up one more time
+  themeUrl = scriptCache.get(theme);
+  if (themeUrl !== null) {
+    Logger.log('found it2: %s', themeUrl);
+    return theme;
+  }
+
+  throw ERR_THEME_NOT_FOUND;
 }
 
 // gets and caches theme style
