@@ -1,5 +1,5 @@
-// todo: to uppercase
-var title = 'Code Blocks';
+// add-on title
+var TITLE = 'Code Blocks';
 
 // highlight.js config
 var HLJS_DEFAULT_VERSION = '9.6.0';
@@ -8,12 +8,12 @@ var HLJS_CDN_URL_PRE = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/';
 var HLJS_GH_BUILD_URL = 'https://api.github.com/repos/highlightjs/cdn-release/contents/build';
 //var HLJS_GH_LANGUAGES_URL = HLJS_GH_BUILD_URL + '/languages';
 var HLJS_GH_THEMES_URL = HLJS_GH_BUILD_URL + '/styles?ref=master';
+var THEME_DEFAULT = 'default';
 
-var properties = {
-  language: 'language',
-  theme: 'theme',
-  noBackground: 'noBackground'
-};
+// user preferences
+var PROPERTY_LANGUAGE = 'language';
+var PROPERTY_THEME = 'theme';
+var PROPERTY_NO_BACKGROUND = 'no_background';
 
 // cache config
 var DEFAULT_TTL = 60; // todo: to 3600
@@ -36,8 +36,6 @@ var ERR_GETTING_THEMES = "Couldn't get themes.";
  
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
- * This method is only used by the regular add-on, and is never called by
- * the mobile add-on version.
  *
  * @param {object} e The event parameter for a simple onOpen trigger. To
  *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
@@ -51,8 +49,6 @@ function onOpen(e) {
 
 /**
  * Runs when the add-on is installed.
- * This method is only used by the regular add-on, and is never called by
- * the mobile add-on version.
  *
  * @param {object} e The event parameter for a simple onInstall trigger. To
  *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
@@ -62,18 +58,15 @@ function onOpen(e) {
  */
 function onInstall(e) {
   onOpen(e);
-  // possibly intro? theres something in the guides about a tour
 }
 
 /**
  * Opens a sidebar in the document containing the add-on's user interface.
- * This method is only used by the regular add-on, and is never called by
- * the mobile add-on version.
  */
 function showSidebar() {
   var ui = HtmlService.createTemplateFromFile('sidebar').evaluate()
       .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-      .setTitle(title)
+      .setTitle(TITLE)
 
   DocumentApp.getUi().showSidebar(ui);
 }
@@ -81,8 +74,6 @@ function showSidebar() {
 // top-level
 /**
  * Gets the stored user preferences, if they exist.
- * This method is only used by the regular add-on, and is never called by
- * the mobile add-on version.
  *
  * @return {Object} The user's preferences, if they exist.
  */
@@ -90,11 +81,10 @@ function getPreferences() {
   try {
     var userProperties = PropertiesService.getUserProperties();
     return {
-      language: userProperties.getProperty(properties.language),
-      theme: userProperties.getProperty(properties.theme),
-      noBackground: userProperties.getProperty(properties.noBackground)
+      language: userProperties.getProperty(PROPERTY_LANGUAGE),
+      theme: userProperties.getProperty(PROPERTY_THEME),
+      noBackground: userProperties.getProperty(PROPERTY_NO_BACKGROUND)
     };
-//    return userProperties.getProperties();
   } catch (e) {
     logError(ERR_USER_PREFERENCES, e);
     throw ERR_GETTING_USER_PREFERENCES;
@@ -113,12 +103,9 @@ function getThemes() {
 
 // button function
 function getPreferencesAndThemes() {
-  var themes = getThemes();
-  var prefs = getPreferences();
-
   return {
-    themes: themes,
-    prefs: prefs
+    themes: getThemes(),
+    prefs: getPreferences()
   };
 }
 
@@ -152,7 +139,7 @@ function getThemesHelper() {
   }
 
   // cache default theme, because it contains the base css
-  var defaultUrl = themeUrls['default'];
+  var defaultUrl = themeUrls[THEME_DEFAULT];
   if (defaultUrl !== undefined) {
     getThemeStyle(defaultUrl);
   }
@@ -230,17 +217,17 @@ function getThemesFromGh() {
 function getSelectionAndThemeStyle(language, theme, noBackground) {
   // save user preferences
   var userProperties = PropertiesService.getUserProperties();
-  userProperties.setProperty(properties.language, language);
-  userProperties.setProperty(properties.theme, theme);
-  userProperties.setProperty(properties.noBackground, noBackground);
+  userProperties.setProperty(PROPERTY_LANGUAGE, language);
+  userProperties.setProperty(PROPERTY_THEME, theme);
+  userProperties.setProperty(PROPERTY_NO_BACKGROUND, noBackground);
 
   var result = {'css': ''};
   var scriptCache = CacheService.getScriptCache();
 
   // prepend default css for other themes
   var themeUrl;
-  if (theme !== 'default') {
-    themeUrl = scriptCache.get('default');
+  if (theme !== THEME_DEFAULT) {
+    themeUrl = scriptCache.get(THEME_DEFAULT);
     if (themeUrl !== null) {
       Logger.log('default theme url: %s', themeUrl);
       result.css += getThemeStyle(themeUrl);
