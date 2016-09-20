@@ -144,13 +144,17 @@ function showPreview() {
 
 // callback function render preview block
 function renderPreview(selection, css, language, noBackground) {
-  var highlighted = createHighlightedBlock(selection, css, language, noBackground);
-  $(ID_PREVIEW).replaceWith(highlighted);
+  var highlighted = createHighlightedBlock(selection, css, language);
+  var preview = $(ID_PREVIEW);
+  preview.replaceWith(highlighted);
+  if (noBackground) {
+    preview.css('background', DEFAULT_BACKGROUND_COLOR);
+  }
 
   $(ID_PASTE).prop('disabled', false);
 }
 
-function createHighlightedBlock(text, css, language, noBackground) {
+function createHighlightedBlock(text, css, language) {
   var preview = $(ID_PREVIEW);
   var block = preview.clone();
 
@@ -167,10 +171,6 @@ function createHighlightedBlock(text, css, language, noBackground) {
     highlighted = juice.inlineContent(highlighted, css);
   }
   
-  if (noBackground) {
-    resetBackground(highlighted);
-  }
-  
   return highlighted;
 }
 
@@ -185,7 +185,7 @@ function clearCode() {
           function(result, element) {
             var preview = $(ID_PREVIEW);
             preview.empty();
-            resetBackground(preview);
+            preview.css('background', DEFAULT_BACKGROUND_COLOR);
             $('#insert-code').prop('disabled', true);
           }
       )
@@ -210,7 +210,7 @@ function highlightSelection() {
           function(result, element) {
             var selection = result['selection'];
             var css = result['css'];
-            var block = createHighlightedBlock(selection, css, language, noBackground);
+            var block = createHighlightedBlock(selection, css, language);
 
             google.script.run
                 .withFailureHandler(showErrorHighlightButtons)
@@ -266,10 +266,6 @@ function showErrorPreviewButtons(msg, element) {
 function showErrorHighlightButtons(msg, element) {
   showError(msg, $(ID_HIGHLIGHT_BUTTONS));
   element.disabled = false;
-}
-
-function resetBackground(element) {
-  element.css('background', DEFAULT_BACKGROUND_COLOR);
 }
 
 /**
