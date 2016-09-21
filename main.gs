@@ -261,7 +261,7 @@ function getThemeUrl(theme) {
   themeUrl = scriptCache.get(theme);
   if (themeUrl !== null) {
     Logger.log('found it2: %s', themeUrl);
-    return theme;
+    return themeUrl;
   }
 
   throw ERR_THEME_NOT_FOUND;
