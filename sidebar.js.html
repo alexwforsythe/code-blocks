@@ -234,7 +234,7 @@ function insertPreview() {
   var html = $(ID_PREVIEW).outerHTML();
 
   google.script.run
-      .withFailureHandler(showErrorHighlightButtons)
+      .withFailureHandler(showErrorPreviewButtons)
       .withSuccessHandler(focusEditor)
       .withUserObject(this)
       .insertCode(html, noBackground);
