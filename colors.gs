@@ -10,27 +10,38 @@ function colorToHex(color) {
   var nums = color.match(RGB_PATTERN);
   if (nums === null) {
     if (isHex) {
+      // just in case it's mixed with another style
+      color = color.substring(0, 7);
       return padHex(color);
     }
     return COLORS[color];
   }
 
-  return [1,2,3].map(
+  var hex = [1,2,3].map(
       function(i) {
-        pad(parseInt(nums[i], 10).toString(16));
+        return parseInt(nums[i], 10).toString(16);
       }).join('');
+
+  return padHex(hex);
 }
 
+// #ff, ff -> #0000ff
 function padHex(hex) {
-  var zeros = new Array(7 - hex.length + 1).join('0')
-  return '#' + zeros + hex.substring(1);
-}
-
-function pad(num) {
-  if (num.length === 1) {
-    num = '0' + num;
+  if (hex.indexOf('#') === 0) {
+    hex = hex.substring(1);
   }
-  return num;
+
+  if (hex.length === 3) {
+    // this is a thing?
+    // https://en.wikipedia.org/wiki/Web_colors#Shorthand_hexadecimal_form
+    return '#' + [0, 1, 2].map(
+        function(i) {
+          return hex[i] + hex[i];
+        }).join('');
+  }
+
+  var zeros = new Array(6 - hex.length + 1).join('0')
+  return '#' + zeros + hex;
 }
 
 var COLORS = {
