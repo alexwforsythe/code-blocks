@@ -144,17 +144,14 @@ function showPreview() {
 
 // callback function render preview block
 function renderPreview(selection, css, language, noBackground) {
-  var highlighted = createHighlightedBlock(selection, css, language);
+  var block = createHighlightedBlock(selection, css, language, noBackground);
   var preview = $(ID_PREVIEW);
-  preview.replaceWith(highlighted);
-  if (noBackground) {
-    preview.css('background', DEFAULT_BACKGROUND_COLOR);
-  }
+  preview.replaceWith(block);
 
   $(ID_PASTE).prop('disabled', false);
 }
 
-function createHighlightedBlock(text, css, language) {
+function createHighlightedBlock(text, css, language, noBackground) {
   var preview = $(ID_PREVIEW);
   var block = preview.clone();
 
@@ -170,8 +167,13 @@ function createHighlightedBlock(text, css, language) {
   if (css != null) {
     highlighted = juice.inlineContent(highlighted, css);
   }
-  
-  return highlighted;
+
+  block = $($.parseHTML(highlighted));
+  if (noBackground) {
+    block.css('background', DEFAULT_BACKGROUND_COLOR);
+  }
+
+  return block;
 }
 
 /*
@@ -211,12 +213,13 @@ function highlightSelection() {
             var selection = result['selection'];
             var css = result['css'];
             var block = createHighlightedBlock(selection, css, language);
+            var html = block.outerHTML();
 
             google.script.run
                 .withFailureHandler(showErrorHighlightButtons)
                 .withSuccessHandler(focusEditor)
                 .withUserObject(element)
-                .insertCode(block, noBackground);
+                .insertCode(html, noBackground);
           })
       .withUserObject(this)
       .getSelectionAndThemeStyle(language, theme, noBackground);

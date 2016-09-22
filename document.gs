@@ -62,7 +62,7 @@ function insertIntoSelection(selection, html, noBackground) {
 //    Logger.log('element: ' + element + ', type: ' + element.getType());
 
     if (rangeElement.isPartial()) {
-      Logger.log('parent type: ' + rangeElement.getElement().getParent().getType());
+//      Logger.log('parent type: ' + rangeElement.getElement().getParent().getType());
       var start = rangeElement.getStartOffset();
       var end = rangeElement.getEndOffsetInclusive();
       var before = element.editAsText().getText().substring(0, start);
@@ -78,10 +78,10 @@ function insertIntoSelection(selection, html, noBackground) {
       }
       if (!replaced) {
         if (before === '' && after === '') {
-          var table = appendTableWithHTML(parent, html);
+          var table = appendTableWithHTML(parent, html, noBackground);
           parent.removeFromParent();
         } else {
-          insertHTMLAsText(parent, 0, html);
+          insertHTMLAsText(parent, 0, html, noBackground);
         }
         replaced = true;
       }
@@ -96,7 +96,7 @@ function insertIntoSelection(selection, html, noBackground) {
       }
 
       if (!replaced) {
-        appendTableWithHTML(element, html);
+        appendTableWithHTML(element, html, noBackground);
         removeElement(element);
         replaced = true;
       } else {
@@ -113,7 +113,7 @@ function insertIntoCursor(html, noBackground) {
   
   if (element.getType() === DocumentApp.ElementType.PARAGRAPH &&  
       element.asParagraph().getNumChildren() === 0) {
-    appendTableWithHTML(element, html);
+    appendTableWithHTML(element, html, noBackground);
     removeElement(element);
     return;
   }
@@ -135,14 +135,14 @@ function insertIntoCursor(html, noBackground) {
     var text = parent.insertText(0, after);
     text.setAttributes(attrs);
   }
-  insertHTMLAsText(parent, 0, html);
+  insertHTMLAsText(parent, 0, html, noBackground);
   if (before != '') {
     var text = parent.insertText(0, before);
     text.setAttributes(attrs);
   }
 }
 
-function appendTableWithHTML(element, html) {
+function appendTableWithHTML(element, html, noBackground) {
   var body = DocumentApp.getActiveDocument().getBody();
   var index = body.getChildIndex(element) + 1;
   var table = body.insertTable(index);
@@ -152,7 +152,7 @@ function appendTableWithHTML(element, html) {
   
   var cell = table.appendTableRow().appendTableCell();
   var par = cell.appendParagraph('');
-  insertHTMLAsText(par, 0, html, cell);
+  insertHTMLAsText(par, 0, html, noBackground, cell);
   
   // clean up cell (remove initial paragraph)
   cell.getChild(0).removeFromParent();
@@ -160,8 +160,7 @@ function appendTableWithHTML(element, html) {
   return table;
 }
 
-// todo: weird optional param?
-function insertHTMLAsText(element, index, html, cell) {
+function insertHTMLAsText(element, index, html, noBackground, cell) {
   var block = XmlService.parse(html);
 //  var output = XmlService.getPrettyFormat().format(block);
 //  Logger.log('block: ' + output);
@@ -171,26 +170,29 @@ function insertHTMLAsText(element, index, html, cell) {
 
   // disable font style attrs by default so they don't carry
   // over to new elements
+  // todo: might not be necessary now that we're handling it up the stack
   attrs[DocumentApp.Attribute.BOLD] = false;
   attrs[DocumentApp.Attribute.ITALIC] = false;
   attrs[DocumentApp.Attribute.UNDERLINE] = false;
   attrs[DocumentApp.Attribute.STRIKETHROUGH] = false;
-  
+
   var root = block.getRootElement();
-  
-  // set cell background color if provided
-  if (cell !== undefined) {
+
+  // set cell background color inserting a table
+  if (cell !== undefined && !noBackground) {
     style = root.getAttribute('style');
     var rootAttrs = addStyleAttrs({}, style);
     var cellAttrs = cell.getAttributes();
     cellAttrs[DocumentApp.Attribute.BACKGROUND_COLOR] = rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
     cell.setAttributes(cellAttrs);
+    // doesn't always work, todo
+//    cell.setBackgroundColor(rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR]);
   }
 
-  insertNode(element, index, root, attrs);
+  insertNode(element, index, root, attrs, noBackground);
 }
 
-function insertNode(element, index, node, attrs) {
+function insertNode(element, index, node, attrs, noBackground) {
   if (node.getType() === XmlService.ContentTypes.TEXT) {
     var str = node.getText();
 //    Logger.log('text: ' + str);
@@ -205,7 +207,7 @@ function insertNode(element, index, node, attrs) {
 //    Logger.log('style: ' + style);
 
     // pass new style attributes down the stack
-    var childAttrs = addStyleAttrs(attrs, style);
+    var childAttrs = addStyleAttrs(attrs, style, noBackground);
 
     var children = child.getAllContent();
     for (var i = children.length - 1; i >= 0; i--) {
@@ -214,7 +216,7 @@ function insertNode(element, index, node, attrs) {
   }
 }
 
-function addStyleAttrs(attrs, attr) {
+function addStyleAttrs(attrs, attr, noBackground) {
   if (attr == null) {
     return attrs;
   }
@@ -226,14 +228,14 @@ function addStyleAttrs(attrs, attr) {
   for (var i = 0; i < styles.length; i++) {
     var pieces = styles[i].split(':');
     if (pieces.length == 2) {
-      addStyleAttr(attrs, pieces[0], pieces[1]);
+      addStyleAttr(attrs, pieces[0], pieces[1], noBackground);
     }
   }
   
   return attrs;
 }
 
-function addStyleAttr(attrs, key, val) {
+function addStyleAttr(attrs, key, val, noBackground) {
   key = key.trim().toLowerCase();
   val = val.trim().toLowerCase();
   
@@ -249,6 +251,9 @@ function addStyleAttr(attrs, key, val) {
       }
       return;
     case 'background':
+      if (noBackground) {
+        return;
+      }
     case 'color':
       val = colorToHex(val);
   }
@@ -268,7 +273,8 @@ function copyAttrs(attrs) {
 
 // helper function to remove an element
 function removeElement(element) {
-  Logger.log('removing element');
+//  Logger.log('removing element');
+
   if (element.getNextSibling()) {
     return element.removeFromParent();
   }
@@ -278,13 +284,14 @@ function removeElement(element) {
     return element.removeFromParent();
   }
   
-  Logger.log('unable to remove, clearing text instead');
+//  Logger.log('unable to remove, clearing text instead');
   clearText(element);
 }
 
 // helper functional to clear all text from an element
 function clearText(element) {
-  Logger.log('clearing text');
+//  Logger.log('clearing text');
+
   if (element.editAsText) {
     var text = element.editAsText();
     var len = text.getText().length;

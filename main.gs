@@ -317,7 +317,7 @@ function insertCode(html, noBackground) {
 function insertCodeHelper(html, noBackground) {
   // save user preferences
   var userProperties = PropertiesService.getUserProperties();
-  userProperties.setProperty(properties.noBackground, noBackground);
+  userProperties.setProperty(userProperties.noBackground, noBackground);
   
   var selection = DocumentApp.getActiveDocument().getSelection();
   if (selection) {
