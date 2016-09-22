@@ -114,6 +114,7 @@ function getThemesHelper() {
   // try to get urls from cache
   var scriptCache = CacheService.getScriptCache();
   var themeUrls = scriptCache.get(KEY_THEME_URLS);
+
   if (themeUrls !== null) {
     // data in the cache must be stored as a string
     themeUrls = JSON.parse(themeUrls);
@@ -169,8 +170,8 @@ function getThemesFromCdnjs() {
   var themeUrls = {};
   for (var i = 0; i < files.length; i++) {
     var file = files[i];
-    if (file.indexOf('styles/') === 0) {
-      var theme = file.split('styles/').pop().split('.min.css').shift();
+    if (file.indexOf('styles') === 0 && file.indexOf('.css', file.length - 4) !== -1) {
+      var theme = file.split('styles/').pop().split('.')[0];
       if (theme !== undefined) {
         themeUrls[theme] = buildThemeUrl(theme, version);
       }
@@ -188,8 +189,8 @@ function getThemesFromGh() {
   var result = {};
   for (var i = 0; i < data.length; i++) {
     var entry = data[i];
-    if (entry.type === 'file' && entry.name !== undefined) {
-      var theme = entry.name.split('.min.css').shift();
+    if (entry.type === 'file' && entry.name !== undefined && entry.name.indexOf('.css', file.length - 4) !== -1) {
+      var theme = entry.name.split('.')[0];
       // to function
       if (theme !== undefined) {
         result[theme] = buildThemeUrl(theme);
@@ -237,30 +238,23 @@ function getSelectionAndThemeStyle(language, theme, noBackground) {
   var text = getSelectedText();
   selection = text.join('\n');
   result['selection'] = selection;
-  Logger.log('selection:\n%s', selection);
-  Logger.log('returning result:\n%s', result);
 
   return result;
 }
 
 function getThemeUrl(theme) {
-  Logger.log('getting theme url for theme: %s', theme);
-
   var scriptCache = CacheService.getScriptCache();
   var themeUrl = scriptCache.get(theme);
   if (themeUrl !== null) {
-    Logger.log('found it: %s', themeUrl);
     return themeUrl;
   }
 
-  Logger.log('not found, try fetching urls again');
   // themeUrls might have expired, try fetching them again
   getThemes();
 
   // try looking it up one more time
   themeUrl = scriptCache.get(theme);
   if (themeUrl !== null) {
-    Logger.log('found it2: %s', themeUrl);
     return themeUrl;
   }
 
@@ -269,26 +263,19 @@ function getThemeUrl(theme) {
 
 // gets and caches theme style
 function getThemeStyle(themeUrl) {
-  Logger.log('getting theme from url: %s', themeUrl);
-
   var scriptCache = CacheService.getScriptCache();
 //  var css = scriptCache.get(themeUrl);
   var css = null;
   if (css === null) {
-    Logger.log('css not found in cache, fetching...');
-
     var r = UrlFetchApp.fetch(themeUrl);
     css = r.getContentText();
       
     // try to cache the css
     try {
       scriptCache.put(themeUrl, css);
-      Logger.log('cached css for: ' + themeUrl);
     } catch (e) {
       logError('Failed to cache CSS', e);
     }
-  } else {
-    Logger.log('css found in cache');
   }
 
   return css;
@@ -318,7 +305,7 @@ function insertCodeHelper(html, noBackground) {
   // save user preferences
   var userProperties = PropertiesService.getUserProperties();
   userProperties.setProperty(userProperties.noBackground, noBackground);
-  
+
   var selection = DocumentApp.getActiveDocument().getSelection();
   if (selection) {
     insertIntoSelection(selection, html, noBackground);
