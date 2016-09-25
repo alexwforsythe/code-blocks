@@ -16,7 +16,7 @@ var PROPERTY_THEME = 'theme';
 var PROPERTY_NO_BACKGROUND = 'no_background';
 
 // cache config
-var DEFAULT_TTL = 60; // todo: to 3600
+var DEFAULT_TTL = 3600;
 var KEY_THEME_URLS = 'theme_urls';
 
 // errors
