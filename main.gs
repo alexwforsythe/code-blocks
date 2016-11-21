@@ -2,11 +2,11 @@
 var TITLE = 'Code Blocks';
 
 // highlight.js config
-var HLJS_DEFAULT_VERSION = '9.6.0';
+var HLJS_USE_LATEST = false;
+var HLJS_DEFAULT_VERSION = '9.7.0';
 var HLJS_CDNJS_URL = 'https://api.cdnjs.com/libraries/highlight.js';
 var HLJS_CDN_URL_PRE = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/';
 var HLJS_GH_BUILD_URL = 'https://api.github.com/repos/highlightjs/cdn-release/contents/build';
-//var HLJS_GH_LANGUAGES_URL = HLJS_GH_BUILD_URL + '/languages';
 var HLJS_GH_THEMES_URL = HLJS_GH_BUILD_URL + '/styles?ref=master';
 var THEME_DEFAULT = 'default';
 
@@ -20,7 +20,7 @@ var DEFAULT_TTL = 3600;
 var KEY_THEME_URLS = 'theme_urls';
 
 // errors
-var ERR_FAILED_TO_INSERT = "Can't to insert here.";
+var ERR_FAILED_TO_INSERT = "Can't insert here.";
 var ERR_GETTING_USER_PREFERENCES = "Couldn't get user preferences.";
 var ERR_GETTING_THEMES = "Couldn't get themes.";
 var ERR_THEME_NOT_FOUND = "Couldn't get theme.";
@@ -72,7 +72,14 @@ function showSidebar() {
   DocumentApp.getUi().showSidebar(ui);
 }
 
-// top-level
+// button function
+function getPreferencesAndThemes() {
+  return {
+    themes: getThemes(),
+    prefs: getPreferences()
+  };
+}
+
 /**
  * Gets the stored user preferences, if they exist.
  *
@@ -102,17 +109,10 @@ function getThemes() {
   }
 }
 
-// button function
-function getPreferencesAndThemes() {
-  return {
-    themes: getThemes(),
-    prefs: getPreferences()
-  };
-}
-
 function getThemesHelper() {
   // try to get urls from cache
   var scriptCache = CacheService.getScriptCache();
+//  scriptCache.remove(KEY_THEME_URLS);
   var themeUrls = scriptCache.get(KEY_THEME_URLS);
 
   if (themeUrls !== null) {
@@ -155,10 +155,14 @@ function getThemesFromCdnjs() {
   var jsn = r.getContentText();
   var data = JSON.parse(jsn);
 
-  var version = data.version;
+  var version;
+  if (HLJS_USE_LATEST === true) {
+    version = data.version;
+  } else {
+    version = HLJS_DEFAULT_VERSION;
+  }
   var assets = data.assets;
-  var latest;
-  var latest = data['assets'][0];
+  var latest = assets[0];
   for (var i = 1; i < assets.length; i++) {
     if (assets[i].version === version) {
       latest = assets[i];
