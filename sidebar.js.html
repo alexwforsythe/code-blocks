@@ -199,7 +199,6 @@ function createHighlightedBlock(text, css, language, noBackground) {
     highlighted = juice.inlineContent(highlighted, css);
   }
 
-
   block = $($.parseHTML(highlighted));
   if (noBackground) {
     block.css('background', DEFAULT_BACKGROUND_COLOR);
