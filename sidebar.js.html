@@ -13,7 +13,6 @@
 var ID_LANGUAGE = '#language';
 var ID_THEME = '#theme';
 var ID_NO_BACKGROUND = '#no-background';
-var ID_REPLACE_SMART_QUOTES = '#replace-smart-quotes';
 var ID_PREVIEW_BUTTONS = '#preview-buttons';
 var ID_SHOW_PREVIEW = '#show-preview';
 var ID_PREVIEW = '#preview';
@@ -109,9 +108,6 @@ function loadPreferences(prefs, themes) {
   if (prefs.noBackground === 'true') {
     $(ID_NO_BACKGROUND).prop('checked', true);
   }
-  if (prefs.replaceSmartQuotes === 'true') {
-    $(ID_REPLACE_SMART_QUOTES).prop('checked', true);
-  }
 
   // enable forms
   $(ID_LANGUAGE).prop('disabled', false);
@@ -159,7 +155,6 @@ function showPreview() {
   var language = $(ID_LANGUAGE + ' option:selected').text();
   var theme = $(ID_THEME + ' option:selected').text();
   var noBackground = $(ID_NO_BACKGROUND).is(':checked');
-  var replaceSmartQuotes = $(ID_REPLACE_SMART_QUOTES).is(':checked');
 
   google.script.run
       .withFailureHandler(showErrorPreviewButtons)
@@ -168,9 +163,6 @@ function showPreview() {
             var selection = result['selection'];
             var css = result['css'];
 
-            if(replaceSmartQuotes) {
-              selection = performReplaceSmartQuotes(selection);
-            }
             renderPreview(selection, css, language, noBackground);
 
             element.disabled = false;
@@ -192,6 +184,8 @@ function createHighlightedBlock(text, css, language, noBackground) {
   var preview = $(ID_PREVIEW);
   var block = preview.clone();
 
+  text = performReplaceSmartQuotes(text);
+
   block.removeClass();
   block.removeAttr('style');
   block.text(text);
@@ -204,6 +198,7 @@ function createHighlightedBlock(text, css, language, noBackground) {
   if (css != null) {
     highlighted = juice.inlineContent(highlighted, css);
   }
+
 
   block = $($.parseHTML(highlighted));
   if (noBackground) {
@@ -242,7 +237,6 @@ function highlightSelection() {
   var language = $(ID_LANGUAGE + ' option:selected').text();
   var theme = $(ID_THEME + ' option:selected').text();
   var noBackground = $(ID_NO_BACKGROUND).is(':checked');
-  var replaceSmartQuotes = $(ID_REPLACE_SMART_QUOTES).is(':checked');
 
   google.script.run
       .withFailureHandler(showErrorHighlightButtons)
@@ -252,10 +246,6 @@ function highlightSelection() {
             var css = result['css'];
             var block = createHighlightedBlock(selection, css, language);
             var html = block.outerHTML();
-
-            if(replaceSmartQuotes) {
-              html = performReplaceSmartQuotes(html);
-            }
 
             google.script.run
                 .withFailureHandler(showErrorHighlightButtons)
@@ -273,12 +263,7 @@ function insertPreview() {
   $(ID_ERROR).remove();
 
   var noBackground = $(ID_NO_BACKGROUND).is(':checked');
-  var replaceSmartQuotes = $(ID_REPLACE_SMART_QUOTES).is(':checked');
   var html = $(ID_PREVIEW).outerHTML();
-
-  if(replaceSmartQuotes) {
-    html = performReplaceSmartQuotes(html);
-  }
 
   google.script.run
       .withFailureHandler(showErrorPreviewButtons)
