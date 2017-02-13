@@ -68,7 +68,7 @@ function loadThemes(themes, prefs) {
   var i = themes.indexOf(THEME_DEFAULT);
   if (i != -1) {
     themes.splice(i, 1);
-  } 
+  }
 
   for (var i = 0; i < themes.length; i++) {
     var theme = themes[i];
@@ -77,7 +77,7 @@ function loadThemes(themes, prefs) {
 }
 
 /**
- * Callback function that populates inputs elements with user preferences 
+ * Callback function that populates inputs elements with user preferences
  * from the server.
  *
  * @param {Object} prefs The saved preferences.
@@ -123,6 +123,26 @@ function toggleConvertTabs() {
   hljs.configure({'tabReplace': checked ? '  ' : null});
 }
 
+function performReplaceSmartQuotes(html){
+  html = html.replace( /\u2018|\u2019|\u201A|\uFFFD/g, "'" );
+  html = html.replace( /\u201c|\u201d|\u201e/g, '"' );
+  html = html.replace( /\u02C6/g, '^' );
+  html = html.replace( /\u2039/g, '<' );
+  html = html.replace( /\u203A/g, '>' );
+  html = html.replace( /\u2013/g, '-' );
+  html = html.replace( /\u2014/g, '--' );
+  html = html.replace( /\u2026/g, '...' );
+  html = html.replace( /\u00A9/g, '(c)' );
+  html = html.replace( /\u00AE/g, '(r)' );
+  html = html.replace( /\u2122/g, 'TM' );
+  html = html.replace( /\u00BC/g, '1/4' );
+  html = html.replace( /\u00BD/g, '1/2' );
+  html = html.replace( /\u00BE/g, '3/4' );
+  html = html.replace(/[\u02DC|\u00A0]/g, " ");
+
+  return html;
+}
+
 // button function to show code preview
 /**
  * Runs a server-side function to translate the user-selected text and update
@@ -142,6 +162,7 @@ function showPreview() {
           function(result, element) {
             var selection = result['selection'];
             var css = result['css'];
+
             renderPreview(selection, css, language, noBackground);
 
             element.disabled = false;
@@ -162,6 +183,8 @@ function renderPreview(selection, css, language, noBackground) {
 function createHighlightedBlock(text, css, language, noBackground) {
   var preview = $(ID_PREVIEW);
   var block = preview.clone();
+
+  text = performReplaceSmartQuotes(text);
 
   block.removeClass();
   block.removeAttr('style');
