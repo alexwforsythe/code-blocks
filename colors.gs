@@ -1,5 +1,11 @@
-var RGB_PATTERN = /^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i;
+const RGB_PATTERN = /^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i;
 
+/**
+ * todo
+ *
+ * @param color
+ * @returns {any}
+ */
 function colorToHex(color) {
     color = color.toString();
     var isHex = color.indexOf('#') === 0;
@@ -17,15 +23,19 @@ function colorToHex(color) {
         return COLORS[color];
     }
 
-    var hex = [1, 2, 3].map(
-        function (i) {
-            return parseInt(nums[i], 10).toString(16);
-        }).join('');
+    var hex = [1, 2, 3].map(function (i) {
+        return parseInt(nums[i], 10).toString(16);
+    }).join('');
 
     return padHex(hex);
 }
 
-// #ff, ff -> #0000ff
+/**
+ * #ff, ff -> #0000ff
+ *
+ * @param hex
+ * @returns {string}
+ */
 function padHex(hex) {
     if (hex.indexOf('#') === 0) {
         hex = hex.substring(1);
@@ -34,17 +44,17 @@ function padHex(hex) {
     if (hex.length === 3) {
         // this is a thing?
         // https://en.wikipedia.org/wiki/Web_colors#Shorthand_hexadecimal_form
-        return '#' + [0, 1, 2].map(
-                function (i) {
-                    return hex[i] + hex[i];
-                }).join('');
+        return '#' + [0, 1, 2].map(function (i) {
+                return hex[i] + hex[i];
+            }).join('');
     }
 
     var zeros = new Array(6 - hex.length + 1).join('0')
     return '#' + zeros + hex;
 }
 
-var COLORS = {
+// todo: find a built-in way to get these
+const COLORS = {
     "aliceblue": "#f0f8ff",
     "antiquewhite": "#faebd7",
     "aqua": "#00ffff",

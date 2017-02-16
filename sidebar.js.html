@@ -22,22 +22,23 @@
 
 <script>
     // element ids
-    var ID_LANGUAGE = '#language';
-    var ID_THEME = '#theme';
-    var ID_NO_BACKGROUND = '#no-background';
-    var ID_PREVIEW_BUTTONS = '#preview-buttons';
-    var ID_SHOW_PREVIEW = '#show-preview';
-    var ID_PREVIEW = '#preview';
-    var ID_PASTE = '#insert-preview';
-    var ID_HIGHLIGHT_BUTTONS = '#insert-buttons';
-    var ID_HIGHLIGHT = '#highlight-selection';
-    var ID_ERROR = '#error';
+    const ID_LANGUAGE = '#language',
+        ID_THEME = '#theme',
+        ID_NO_BACKGROUND = '#no-background',
+        ID_PREVIEW_BUTTONS = '#preview-buttons',
+        ID_SHOW_PREVIEW = '#show-preview',
+        ID_PREVIEW = '#preview',
+        ID_PASTE = '#insert-preview',
+        ID_HIGHLIGHT_BUTTONS = '#insert-buttons',
+        ID_HIGHLIGHT = '#highlight-selection',
+        ID_ERROR = '#error';
 
-    var THEME_DEFAULT = 'default';
+    const THEME_DEFAULT = 'default',
+        DEFAULT_BACKGROUND_COLOR = '#f0f0f0',
+        LANGUAGE_AUTO = 'Auto';
+
     var LANGUAGES = hljs.listLanguages();
     LANGUAGES.sort();
-
-    var DEFAULT_BACKGROUND_COLOR = '#f0f0f0';
 
     /**
      * On document load, try to load languages and themes, try to load the
@@ -74,18 +75,17 @@
 
     // callback function that populates theme input options
     function loadThemes (themes, prefs) {
-        var themeSelect = $(ID_THEME);
+        const themeSelect = $(ID_THEME);
 
         // remove 'default', because its CSS is already in HTML as a fallback
         var i = themes.indexOf(THEME_DEFAULT);
-        if (i != -1) {
+        if (i !== -1) {
             themes.splice(i, 1);
         }
 
-        for (var i = 0; i < themes.length; i++) {
-            var theme = themes[i];
+        themes.forEach(function (theme) {
             themeSelect.append('<option value="' + theme + '">' + theme + '</option>');
-        }
+        });
     }
 
     /**
@@ -93,23 +93,23 @@
      * from the server.
      *
      * @param {Object} prefs The saved preferences.
+     * @param themes
      */
     function loadPreferences (prefs, themes) {
-//  console.log(LANGUAGES);
-//  console.log(themes);
-//  console.log(prefs);
+//        console.log(LANGUAGES);
+//        console.log(themes);
+//        console.log(prefs);
 
         if (prefs.language) {
-            var language = $(ID_LANGUAGE);
-            LANGUAGES.forEach(function (lang) {
-                if (lang === prefs.language) {
-                    language.val(prefs.language);
-                    return;
+            const language = $(ID_LANGUAGE);
+            for (var i = 0; i < LANGUAGES.length; i++) {
+                if (LANGUAGES[i] === prefs.language) {
+                    language.val(prefs.language)
                 }
-            });
+            }
         }
         if (prefs.theme) {
-            var theme = $(ID_THEME);
+            const theme = $(ID_THEME);
             for (var i = 0; i < themes.length; i++) {
                 if (themes[i] === prefs.theme) {
                     theme.val(prefs.theme);
@@ -128,29 +128,22 @@
         $(ID_SHOW_PREVIEW).prop('disabled', false);
     }
 
-    // todo: unused
-    // button function to toggle using spaces
-    function toggleConvertTabs () {
-        var checked = $(this).is(':checked');
-        hljs.configure({'tabReplace': checked ? '  ' : null});
-    }
-
-    function performReplaceSmartQuotes (html) {
-        html = html.replace(/\u2018|\u2019|\u201A|\uFFFD/g, "'");
-        html = html.replace(/\u201c|\u201d|\u201e/g, '"');
-        html = html.replace(/\u02C6/g, '^');
-        html = html.replace(/\u2039/g, '<');
-        html = html.replace(/\u203A/g, '>');
-        html = html.replace(/\u2013/g, '-');
-        html = html.replace(/\u2014/g, '--');
-        html = html.replace(/\u2026/g, '...');
-        html = html.replace(/\u00A9/g, '(c)');
-        html = html.replace(/\u00AE/g, '(r)');
-        html = html.replace(/\u2122/g, 'TM');
-        html = html.replace(/\u00BC/g, '1/4');
-        html = html.replace(/\u00BD/g, '1/2');
-        html = html.replace(/\u00BE/g, '3/4');
-        html = html.replace(/[\u02DC|\u00A0]/g, " ");
+    function replaceSpecialChars (html) {
+        html = html.replace(/\u2018|\u2019|\u201A|\uFFFD/g, "'")
+            .replace(/\u201c|\u201d|\u201e/g, '"')
+            .replace(/\u02C6/g, '^')
+            .replace(/\u2039/g, '<')
+            .replace(/\u203A/g, '>')
+            .replace(/\u2013/g, '-')
+            .replace(/\u2014/g, '--')
+            .replace(/\u2026/g, '...')
+            .replace(/\u00A9/g, '(c)')
+            .replace(/\u00AE/g, '(r)')
+            .replace(/\u2122/g, 'TM')
+            .replace(/\u00BC/g, '1/4')
+            .replace(/\u00BD/g, '1/2')
+            .replace(/\u00BE/g, '3/4')
+            .replace(/[\u02DC|\u00A0]/g, " ");
 
         return html;
     }
@@ -164,19 +157,15 @@
         this.disabled = true;
         $(ID_ERROR).remove();
 
-        var language = $(ID_LANGUAGE + ' option:selected').text();
-        var theme = $(ID_THEME + ' option:selected').text();
-        var noBackground = $(ID_NO_BACKGROUND).is(':checked');
+        const language = $(ID_LANGUAGE + ' option:selected').text();
+        const theme = $(ID_THEME + ' option:selected').text();
+        const noBackground = $(ID_NO_BACKGROUND).is(':checked');
 
         google.script.run
             .withFailureHandler(showErrorPreviewButtons)
             .withSuccessHandler(
                 function (result, element) {
-                    var selection = result['selection'];
-                    var css = result['css'];
-
-                    renderPreview(selection, css, language, noBackground);
-
+                    renderPreview(result['selection'], result['css'], language, noBackground);
                     element.disabled = false;
                 })
             .withUserObject(this)
@@ -185,23 +174,23 @@
 
     // callback function render preview block
     function renderPreview (selection, css, language, noBackground) {
-        var block = createHighlightedBlock(selection, css, language, noBackground);
-        var preview = $(ID_PREVIEW);
-        preview.replaceWith(block);
+        const block = createHighlightedBlock(selection, css, language, noBackground);
+        const preview = $(ID_PREVIEW);
 
+        preview.replaceWith(block);
         $(ID_PASTE).prop('disabled', false);
     }
 
     function createHighlightedBlock (text, css, language, noBackground) {
-        var preview = $(ID_PREVIEW);
+        const preview = $(ID_PREVIEW);
         var block = preview.clone();
 
-        text = performReplaceSmartQuotes(text);
+        text = replaceSpecialChars(text);
 
         block.removeClass();
         block.removeAttr('style');
         block.text(text);
-        if (language !== 'Auto') { // todo: to constant
+        if (language !== LANGUAGE_AUTO) {
             block.addClass(language);
         }
         hljs.highlightBlock(block[0]); // todo: why [0]?
@@ -219,44 +208,23 @@
         return block;
     }
 
-    /*
-     // button function to clear preview
-     function clearCode() {
-     this.disabled = true;
-     $('error').remove()
-     google.script.run
-     .withFailureHandler(showErrorPreviewButtons)
-     .withSuccessHandler(
-     function(result, element) {
-     var preview = $(ID_PREVIEW);
-     preview.empty();
-     preview.css('background', DEFAULT_BACKGROUND_COLOR);
-     $('#insert-code').prop('disabled', true);
-     }
-     )
-     .withUserObject(this)
-     .stub();
-     }
-     */
-
     // button function to highlight selection
     function highlightSelection () {
         this.disabled = true;
         $(ID_ERROR).remove();
 
-        var preview = $(ID_PREVIEW);
-        var language = $(ID_LANGUAGE + ' option:selected').text();
-        var theme = $(ID_THEME + ' option:selected').text();
-        var noBackground = $(ID_NO_BACKGROUND).is(':checked');
+        const language = $(ID_LANGUAGE + ' option:selected').text(),
+            theme = $(ID_THEME + ' option:selected').text(),
+            noBackground = $(ID_NO_BACKGROUND).is(':checked');
 
         google.script.run
             .withFailureHandler(showErrorHighlightButtons)
             .withSuccessHandler(
                 function (result, element) {
-                    var selection = result['selection'];
-                    var css = result['css'];
-                    var block = createHighlightedBlock(selection, css, language);
-                    var html = block.outerHTML();
+                    const selection = result['selection'],
+                        css = result['css'],
+                        block = createHighlightedBlock(selection, css, language),
+                        html = block.outerHTML();
 
                     google.script.run
                         .withFailureHandler(showErrorHighlightButtons)
@@ -273,8 +241,8 @@
         this.disabled = true;
         $(ID_ERROR).remove();
 
-        var noBackground = $(ID_NO_BACKGROUND).is(':checked');
-        var html = $(ID_PREVIEW).outerHTML();
+        const noBackground = $(ID_NO_BACKGROUND).is(':checked');
+        const html = $(ID_PREVIEW).outerHTML();
 
         google.script.run
             .withFailureHandler(showErrorPreviewButtons)
@@ -295,7 +263,7 @@
 
     function showErrorThemes (msg, element) {
         showError(msg, $('#themes'));
-//  element.disabled = false;
+//        element.disabled = false;
 
         // enable other forms even if getting themes fails
         $(ID_LANGUAGE).prop('disabled', false);
@@ -321,7 +289,7 @@
      * @param element The element after which to display the error.
      */
     function showError (msg, element) {
-        var div = $('<div id="error" class="error">' + msg + '</div>');
+        const div = $('<div id="error" class="error">' + msg + '</div>');
         $(element).after(div);
     }
 </script>

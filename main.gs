@@ -1,29 +1,29 @@
 // add-on title
-var TITLE = 'Code Blocks';
+const TITLE = 'Code Blocks';
 
 // highlight.js config
-var HLJS_USE_LATEST = false;
-var HLJS_DEFAULT_VERSION = '9.7.0';
-var HLJS_CDNJS_URL = 'https://api.cdnjs.com/libraries/highlight.js';
-var HLJS_CDN_URL_PRE = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/';
-var HLJS_GH_BUILD_URL = 'https://api.github.com/repos/highlightjs/cdn-release/contents/build';
-var HLJS_GH_THEMES_URL = HLJS_GH_BUILD_URL + '/styles?ref=master';
-var THEME_DEFAULT = 'default';
+const HLJS_USE_LATEST = false;
+const HLJS_DEFAULT_VERSION = '9.7.0';
+const HLJS_CDNJS_URL = 'https://api.cdnjs.com/libraries/highlight.js';
+const HLJS_CDN_URL_PRE = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/';
+const HLJS_GH_BUILD_URL = 'https://api.github.com/repos/highlightjs/cdn-release/contents/build';
+const HLJS_GH_THEMES_URL = HLJS_GH_BUILD_URL + '/styles?ref=master';
+const THEME_DEFAULT = 'default';
 
 // user preferences
-var PROPERTY_LANGUAGE = 'language';
-var PROPERTY_THEME = 'theme';
-var PROPERTY_NO_BACKGROUND = 'no_background';
+const PROPERTY_LANGUAGE = 'language';
+const PROPERTY_THEME = 'theme';
+const PROPERTY_NO_BACKGROUND = 'no_background';
 
 // cache config
-var DEFAULT_TTL = 3600;
-var KEY_THEME_URLS = 'theme_urls';
+const DEFAULT_TTL = 3600;
+const KEY_THEME_URLS = 'theme_urls';
 
 // errors
-var ERR_FAILED_TO_INSERT = "Can't insert here.";
-var ERR_GETTING_USER_PREFERENCES = "Couldn't get user preferences.";
-var ERR_GETTING_THEMES = "Couldn't get themes.";
-var ERR_THEME_NOT_FOUND = "Couldn't get theme.";
+const ERR_FAILED_TO_INSERT = "Can't insert here.";
+const ERR_GETTING_USER_PREFERENCES = "Couldn't get user preferences.";
+const ERR_GETTING_THEMES = "Couldn't get themes.";
+const ERR_THEME_NOT_FOUND = "Couldn't get theme.";
 
 /**
  * @OnlyCurrentDoc
@@ -72,7 +72,11 @@ function showSidebar() {
     DocumentApp.getUi().showSidebar(ui);
 }
 
-// button function
+/**
+ * todo
+ *
+ * @returns {{themes: string[], prefs: {language: string, theme: string, noBackground: string}}}
+ */
 function getPreferencesAndThemes() {
     return {
         themes: getThemes(),
@@ -83,7 +87,7 @@ function getPreferencesAndThemes() {
 /**
  * Gets the stored user preferences, if they exist.
  *
- * @return {Object} The user's preferences, if they exist.
+ * @returns {{language: string, theme: string, noBackground: string}} The user's preferences, if they exist.
  */
 function getPreferences() {
     try {
@@ -99,7 +103,11 @@ function getPreferences() {
     }
 }
 
-// button function to get themes from cdnjs
+/**
+ * todo: button function to get themes from cdnjs
+ *
+ * @returns {string[]}
+ */
 function getThemes() {
     try {
         return getThemesHelper();
@@ -205,7 +213,6 @@ function getThemesFromGh() {
     return result;
 }
 
-// top-level
 /**
  * Gets the user-selected text and translates it from the origin language to the
  * destination language. The languages are notated by their two-letter short
@@ -219,6 +226,15 @@ function getThemesFromGh() {
  *     language preferences.
  * @return {Object} Object containing the original text and the result of the
  *     translation.
+ */
+
+/**
+ * todo
+ *
+ * @param language
+ * @param theme
+ * @param noBackground
+ * @returns {{css: string}}
  */
 function getSelectionAndThemeStyle(language, theme, noBackground) {
     // save user preferences
@@ -285,7 +301,6 @@ function getThemeStyle(themeUrl) {
     return css;
 }
 
-// top-level
 /**
  * Replaces the text of the current selection with the provided text, or
  * inserts text at the current cursor location. (There will always be either
@@ -295,7 +310,14 @@ function getThemeStyle(themeUrl) {
  *
  * @param {string} html The HTML with which to replace the current selection.
  */
-// todo: comment
+
+/**
+ * todo
+ *
+ * @param html
+ * @param noBackground
+ * @returns {undefined}
+ */
 function insertCode(html, noBackground) {
     try {
         return insertCodeHelper(html, noBackground);
@@ -312,9 +334,9 @@ function insertCodeHelper(html, noBackground) {
 
     var selection = DocumentApp.getActiveDocument().getSelection();
     if (selection) {
-        insertIntoSelection(selection, html, noBackground);
+        replaceSelection(selection, html, noBackground);
     } else {
-        insertIntoCursor(html, noBackground);
+        insertAtCursor(html, noBackground);
     }
 }
 
@@ -327,7 +349,7 @@ function buildThemeUrl(theme, version) {
 
 // dummy method for button handlers
 // for some reason, click-bound functions will violate sandbox rules
-// unless passed through th server
+// unless passed through the server
 function stub() {
 }
 

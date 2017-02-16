@@ -1,5 +1,5 @@
 // a map of css attributes to document attributes
-var ATTRIBUTES = {
+const ATTRIBUTES = {
     'background': DocumentApp.Attribute.BACKGROUND_COLOR,
     'bold': DocumentApp.Attribute.BOLD,
     'color': DocumentApp.Attribute.FOREGROUND_COLOR,
@@ -8,7 +8,7 @@ var ATTRIBUTES = {
     'underline': DocumentApp.Attribute.UNDERLINE
 };
 
-var ERR_SELECT_TEXT = 'Please select some text.';
+const ERR_SELECT_TEXT = 'Please select some text.';
 
 /**
  * Gets the text the user has selected. If there is no selection,
@@ -26,10 +26,11 @@ function getSelectedText() {
     var elements = selection.getSelectedElements();
     for (var i = 0; i < elements.length; i++) {
         if (elements[i].isPartial()) {
-            var e = elements[i];
-            var startIndex = e.getStartOffset();
-            var endIndex = e.getEndOffsetInclusive();
-            var elementText = e.getElement().asText().getText().substring(startIndex, endIndex + 1);
+            var e = elements[i],
+                startIndex = e.getStartOffset(),
+                endIndex = e.getEndOffsetInclusive(),
+                elementText = e.getElement().asText().getText().substring(startIndex, endIndex + 1);
+
             text.push(elementText);
         } else {
             var element = elements[i].getElement();
@@ -48,8 +49,14 @@ function getSelectedText() {
     return text;
 }
 
-// todo: replaceselection
-function insertIntoSelection(selection, html, noBackground) {
+/**
+ * todo
+ *
+ * @param selection
+ * @param html
+ * @param noBackground
+ */
+function replaceSelection(selection, html, noBackground) {
     var replaced = false;
     var elements = selection.getRangeElements();
 
@@ -57,19 +64,20 @@ function insertIntoSelection(selection, html, noBackground) {
         var rangeElement = elements[i];
         var element = rangeElement.getElement();
 
-//    Logger.log(i);
-//    Logger.log('rangeElement: ' + rangeElement + ', isPartial: ' + rangeElement.isPartial());
-//    Logger.log('element: ' + element + ', type: ' + element.getType());
+        // Logger.log(i);
+        // Logger.log('rangeElement: ' + rangeElement + ', isPartial: ' + rangeElement.isPartial());
+        // Logger.log('element: ' + element + ', type: ' + element.getType());
 
         if (rangeElement.isPartial()) {
-//      Logger.log('parent type: ' + rangeElement.getElement().getParent().getType());
-            var start = rangeElement.getStartOffset();
-            var end = rangeElement.getEndOffsetInclusive();
-            var before = element.editAsText().getText().substring(0, start);
-            var after = element.editAsText().getText().substring(end + 1);
-            var parent = element.getParent();
-            var attrs = parent.getAttributes();
-//      clearText(parent);
+            // Logger.log('parent type: ' + rangeElement.getElement().getParent().getType());
+            var start = rangeElement.getStartOffset(),
+                end = rangeElement.getEndOffsetInclusive(),
+                before = element.editAsText().getText().substring(0, start),
+                after = element.editAsText().getText().substring(end + 1),
+                parent = element.getParent(),
+                attrs = parent.getAttributes();
+
+            // clearText(parent);
             parent.clear();
 
             if (after !== '') {
@@ -106,8 +114,13 @@ function insertIntoSelection(selection, html, noBackground) {
     }
 }
 
-// todo: insertAtCursor
-function insertIntoCursor(html, noBackground) {
+/**
+ * todo
+ *
+ * @param html
+ * @param noBackground
+ */
+function insertAtCursor(html, noBackground) {
     var cursor = DocumentApp.getActiveDocument().getCursor();
     var element = cursor.getElement();
 
@@ -118,12 +131,13 @@ function insertIntoCursor(html, noBackground) {
         return;
     }
 
-    var surroundingText = cursor.getSurroundingText();
-    var surroundingTextOffset = cursor.getSurroundingTextOffset();
-    var surroundingString = surroundingText.getText();
-    var attrs = surroundingText.getAttributes();
-    var before = surroundingString.substring(0, surroundingTextOffset);
-    var after = surroundingString.substring(surroundingTextOffset);
+    var surroundingText = cursor.getSurroundingText(),
+        surroundingTextOffset = cursor.getSurroundingTextOffset(),
+        surroundingString = surroundingText.getText(),
+        attrs = surroundingText.getAttributes(),
+        before = surroundingString.substring(0, surroundingTextOffset),
+        after = surroundingString.substring(surroundingTextOffset);
+
     clearText(element);
 
     // create temporary text to get access to text interface
@@ -162,14 +176,13 @@ function appendTableWithHTML(element, html, noBackground) {
 
 function insertHTMLAsText(element, index, html, noBackground, cell) {
     var block = XmlService.parse(html);
-//  var output = XmlService.getPrettyFormat().format(block);
-//  Logger.log('block: ' + output);
+    // var output = XmlService.getPrettyFormat().format(block);
+    // Logger.log('block: ' + output);
 
     var attrs = {};
     attrs[DocumentApp.Attribute.FONT_FAMILY] = 'Consolas';
 
-    // disable font style attrs by default so they don't carry
-    // over to new elements
+    // disable font style attrs by default so they don't carry over to new elements
     // todo: might not be necessary now that we're handling it up the stack
     attrs[DocumentApp.Attribute.BOLD] = false;
     attrs[DocumentApp.Attribute.ITALIC] = false;
@@ -185,8 +198,8 @@ function insertHTMLAsText(element, index, html, noBackground, cell) {
         var cellAttrs = cell.getAttributes();
         cellAttrs[DocumentApp.Attribute.BACKGROUND_COLOR] = rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
         cell.setAttributes(cellAttrs);
-        // doesn't always work, todo
-//    cell.setBackgroundColor(rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR]);
+        // todo: doesn't always work
+        // cell.setBackgroundColor(rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR]);
     }
 
     insertNode(element, index, root, attrs, noBackground);
@@ -195,7 +208,7 @@ function insertHTMLAsText(element, index, html, noBackground, cell) {
 function insertNode(element, index, node, attrs, noBackground) {
     if (node.getType() === XmlService.ContentTypes.TEXT) {
         var str = node.getText();
-//    Logger.log('text: ' + str);
+        // Logger.log('text: ' + str);
         var text = element.insertText(index, str);
         text.setAttributes(attrs);
         return;
@@ -204,7 +217,7 @@ function insertNode(element, index, node, attrs, noBackground) {
     if (node.getType() === XmlService.ContentTypes.ELEMENT) {
         var child = node.asElement();
         var style = child.getAttribute('style');
-//    Logger.log('style: ' + style);
+        // Logger.log('style: ' + style);
 
         // pass new style attributes down the stack
         var childAttrs = addStyleAttrs(attrs, style, noBackground);
@@ -224,7 +237,7 @@ function addStyleAttrs(attrs, attr, noBackground) {
     attrs = copyAttrs(attrs);
     var style = attr.getValue();
     var styles = style.split(';');
-//  Logger.log('styles: ' + styles);
+    // Logger.log('styles: ' + styles);
     for (var i = 0; i < styles.length; i++) {
         var pieces = styles[i].split(':');
         if (pieces.length == 2) {
@@ -273,7 +286,7 @@ function copyAttrs(attrs) {
 
 // helper function to remove an element
 function removeElement(element) {
-//  Logger.log('removing element');
+    // Logger.log('removing element');
 
     if (element.getNextSibling()) {
         return element.removeFromParent();
@@ -284,13 +297,13 @@ function removeElement(element) {
         return element.removeFromParent();
     }
 
-//  Logger.log('unable to remove, clearing text instead');
+    // Logger.log('unable to remove, clearing text instead');
     clearText(element);
 }
 
 // helper functional to clear all text from an element
 function clearText(element) {
-//  Logger.log('clearing text');
+    // Logger.log('clearing text');
 
     if (element.editAsText) {
         var text = element.editAsText();
