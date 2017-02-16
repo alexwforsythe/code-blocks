@@ -34,7 +34,7 @@ var ERR_THEME_NOT_FOUND = "Couldn't get theme.";
  * and not all of the user's files. The authorization request message
  * presented to users will reflect this limited scope.
  */
- 
+
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
  *
@@ -43,9 +43,9 @@ var ERR_THEME_NOT_FOUND = "Couldn't get theme.";
  *     running in, inspect e.authMode.
  */
 function onOpen(e) {
-  DocumentApp.getUi().createAddonMenu()
-      .addItem('Start', 'showSidebar')
-      .addToUi();
+    DocumentApp.getUi().createAddonMenu()
+        .addItem('Start', 'showSidebar')
+        .addToUi();
 }
 
 /**
@@ -58,26 +58,26 @@ function onOpen(e) {
  *     AuthMode.NONE.)
  */
 function onInstall(e) {
-  onOpen(e);
+    onOpen(e);
 }
 
 /**
  * Opens a sidebar in the document containing the add-on's user interface.
  */
 function showSidebar() {
-  var ui = HtmlService.createTemplateFromFile('sidebar').evaluate()
-      .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-      .setTitle(TITLE)
+    var ui = HtmlService.createTemplateFromFile('sidebar').evaluate()
+        .setSandboxMode(HtmlService.SandboxMode.IFRAME)
+        .setTitle(TITLE)
 
-  DocumentApp.getUi().showSidebar(ui);
+    DocumentApp.getUi().showSidebar(ui);
 }
 
 // button function
 function getPreferencesAndThemes() {
-  return {
-    themes: getThemes(),
-    prefs: getPreferences()
-  };
+    return {
+        themes: getThemes(),
+        prefs: getPreferences()
+    };
 }
 
 /**
@@ -86,123 +86,123 @@ function getPreferencesAndThemes() {
  * @return {Object} The user's preferences, if they exist.
  */
 function getPreferences() {
-  try {
-    var userProperties = PropertiesService.getUserProperties();
-    return {
-      language: userProperties.getProperty(PROPERTY_LANGUAGE),
-      theme: userProperties.getProperty(PROPERTY_THEME),
-      noBackground: userProperties.getProperty(PROPERTY_NO_BACKGROUND)
-    };
-  } catch (e) {
-    logError(ERR_USER_PREFERENCES, e);
-    throw ERR_GETTING_USER_PREFERENCES;
-  }
+    try {
+        var userProperties = PropertiesService.getUserProperties();
+        return {
+            language: userProperties.getProperty(PROPERTY_LANGUAGE),
+            theme: userProperties.getProperty(PROPERTY_THEME),
+            noBackground: userProperties.getProperty(PROPERTY_NO_BACKGROUND)
+        };
+    } catch (e) {
+        logError(ERR_USER_PREFERENCES, e);
+        throw ERR_GETTING_USER_PREFERENCES;
+    }
 }
 
 // button function to get themes from cdnjs
 function getThemes() {
-  try {
-    return getThemesHelper();
-  } catch (e) {
-    logError(ERR_GETTING_THEMES, e);
-    throw ERR_GETTING_THEMES;
-  }
+    try {
+        return getThemesHelper();
+    } catch (e) {
+        logError(ERR_GETTING_THEMES, e);
+        throw ERR_GETTING_THEMES;
+    }
 }
 
 function getThemesHelper() {
-  // try to get urls from cache
-  var scriptCache = CacheService.getScriptCache();
+    // try to get urls from cache
+    var scriptCache = CacheService.getScriptCache();
 //  scriptCache.remove(KEY_THEME_URLS);
-  var themeUrls = scriptCache.get(KEY_THEME_URLS);
+    var themeUrls = scriptCache.get(KEY_THEME_URLS);
 
-  if (themeUrls !== null) {
-    // data in the cache must be stored as a string
-    themeUrls = JSON.parse(themeUrls);
-  } else {
-    // try cdnjs
-    try {
-      themeUrls = getThemesFromCdnjs();
-    } catch (e) {
-      logError(ERR_GETTING_THEMES, e);
-      // try github
-      try {
-        themeUrls = getThemesFromGh();
-      } catch (e2) {
-        logError(ERR_GETTING_THEMES, e2);
-        throw ERR_GETTING_THEMES;
-      }
+    if (themeUrls !== null) {
+        // data in the cache must be stored as a string
+        themeUrls = JSON.parse(themeUrls);
+    } else {
+        // try cdnjs
+        try {
+            themeUrls = getThemesFromCdnjs();
+        } catch (e) {
+            logError(ERR_GETTING_THEMES, e);
+            // try github
+            try {
+                themeUrls = getThemesFromGh();
+            } catch (e2) {
+                logError(ERR_GETTING_THEMES, e2);
+                throw ERR_GETTING_THEMES;
+            }
+        }
+
+        // cache the theme urls
+        scriptCache.put(KEY_THEME_URLS, JSON.stringify(themeUrls), DEFAULT_TTL);
+
+        // cache each url individually for faster lookup
+        scriptCache.putAll(themeUrls, DEFAULT_TTL + 10);
     }
-    
-    // cache the theme urls
-    scriptCache.put(KEY_THEME_URLS, JSON.stringify(themeUrls), DEFAULT_TTL);
 
-    // cache each url individually for faster lookup
-    scriptCache.putAll(themeUrls, DEFAULT_TTL + 10);
-  }
+    // cache default theme, because it contains the base css
+    var defaultUrl = themeUrls[THEME_DEFAULT];
+    if (defaultUrl !== undefined) {
+        getThemeStyle(defaultUrl);
+    }
 
-  // cache default theme, because it contains the base css
-  var defaultUrl = themeUrls[THEME_DEFAULT];
-  if (defaultUrl !== undefined) {
-    getThemeStyle(defaultUrl);
-  }
-
-  var themes = Object.keys(themeUrls);
-  return themes;
+    var themes = Object.keys(themeUrls);
+    return themes;
 }
 
 function getThemesFromCdnjs() {
-  var r = UrlFetchApp.fetch(HLJS_CDNJS_URL);
-  var jsn = r.getContentText();
-  var data = JSON.parse(jsn);
+    var r = UrlFetchApp.fetch(HLJS_CDNJS_URL);
+    var jsn = r.getContentText();
+    var data = JSON.parse(jsn);
 
-  var version;
-  if (HLJS_USE_LATEST === true) {
-    version = data.version;
-  } else {
-    version = HLJS_DEFAULT_VERSION;
-  }
-  var assets = data.assets;
-  var latest = assets[0];
-  for (var i = 1; i < assets.length; i++) {
-    if (assets[i].version === version) {
-      latest = assets[i];
-      break;
+    var version;
+    if (HLJS_USE_LATEST === true) {
+        version = data.version;
+    } else {
+        version = HLJS_DEFAULT_VERSION;
     }
-  }
-  var files = latest.files;
+    var assets = data.assets;
+    var latest = assets[0];
+    for (var i = 1; i < assets.length; i++) {
+        if (assets[i].version === version) {
+            latest = assets[i];
+            break;
+        }
+    }
+    var files = latest.files;
 
-  var themeUrls = {};
-  for (var i = 0; i < files.length; i++) {
-    var file = files[i];
-    if (file.indexOf('styles') === 0 && file.indexOf('.css', file.length - 4) !== -1) {
-      var theme = file.split('styles/').pop().split('.')[0];
-      if (theme !== undefined) {
-        themeUrls[theme] = buildThemeUrl(theme, version);
-      }
+    var themeUrls = {};
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        if (file.indexOf('styles') === 0 && file.indexOf('.css', file.length - 4) !== -1) {
+            var theme = file.split('styles/').pop().split('.')[0];
+            if (theme !== undefined) {
+                themeUrls[theme] = buildThemeUrl(theme, version);
+            }
+        }
     }
-  }
-  
-  return themeUrls;
+
+    return themeUrls;
 }
 
 function getThemesFromGh() {
-  var r = UrlFetchApp.fetch(HLJS_GH_THEMES_URL);
-  var jsn = r.getContentText();
-  var data = JSON.parse(jsn);
-  
-  var result = {};
-  for (var i = 0; i < data.length; i++) {
-    var entry = data[i];
-    if (entry.type === 'file' && entry.name !== undefined && entry.name.indexOf('.css', file.length - 4) !== -1) {
-      var theme = entry.name.split('.')[0];
-      // to function
-      if (theme !== undefined) {
-        result[theme] = buildThemeUrl(theme);
-      }
-    }
-  }
+    var r = UrlFetchApp.fetch(HLJS_GH_THEMES_URL);
+    var jsn = r.getContentText();
+    var data = JSON.parse(jsn);
 
-  return result;
+    var result = {};
+    for (var i = 0; i < data.length; i++) {
+        var entry = data[i];
+        if (entry.type === 'file' && entry.name !== undefined && entry.name.indexOf('.css', file.length - 4) !== -1) {
+            var theme = entry.name.split('.')[0];
+            // to function
+            if (theme !== undefined) {
+                result[theme] = buildThemeUrl(theme);
+            }
+        }
+    }
+
+    return result;
 }
 
 // top-level
@@ -221,68 +221,68 @@ function getThemesFromGh() {
  *     translation.
  */
 function getSelectionAndThemeStyle(language, theme, noBackground) {
-  // save user preferences
-  var userProperties = PropertiesService.getUserProperties();
-  userProperties.setProperty(PROPERTY_LANGUAGE, language);
-  userProperties.setProperty(PROPERTY_THEME, theme);
-  userProperties.setProperty(PROPERTY_NO_BACKGROUND, noBackground);
+    // save user preferences
+    var userProperties = PropertiesService.getUserProperties();
+    userProperties.setProperty(PROPERTY_LANGUAGE, language);
+    userProperties.setProperty(PROPERTY_THEME, theme);
+    userProperties.setProperty(PROPERTY_NO_BACKGROUND, noBackground);
 
-  var result = {'css': ''};
-  var scriptCache = CacheService.getScriptCache();
+    var result = {'css': ''};
+    var scriptCache = CacheService.getScriptCache();
 
-  // prepend default css for other themes
-  var themeUrl;
-  if (theme !== THEME_DEFAULT) {
-    themeUrl = getThemeUrl(THEME_DEFAULT);
-    result.css += getThemeStyle(themeUrl);
-  }
-  themeUrl = getThemeUrl(theme);
-  result.css = getThemeStyle(themeUrl);
+    // prepend default css for other themes
+    var themeUrl;
+    if (theme !== THEME_DEFAULT) {
+        themeUrl = getThemeUrl(THEME_DEFAULT);
+        result.css += getThemeStyle(themeUrl);
+    }
+    themeUrl = getThemeUrl(theme);
+    result.css = getThemeStyle(themeUrl);
 
-  var text = getSelectedText();
-  selection = text.join('\n');
-  result['selection'] = selection;
+    var text = getSelectedText();
+    selection = text.join('\n');
+    result['selection'] = selection;
 
-  return result;
+    return result;
 }
 
 function getThemeUrl(theme) {
-  var scriptCache = CacheService.getScriptCache();
-  var themeUrl = scriptCache.get(theme);
-  if (themeUrl !== null) {
-    return themeUrl;
-  }
+    var scriptCache = CacheService.getScriptCache();
+    var themeUrl = scriptCache.get(theme);
+    if (themeUrl !== null) {
+        return themeUrl;
+    }
 
-  // themeUrls might have expired, try fetching them again
-  getThemes();
+    // themeUrls might have expired, try fetching them again
+    getThemes();
 
-  // try looking it up one more time
-  themeUrl = scriptCache.get(theme);
-  if (themeUrl !== null) {
-    return themeUrl;
-  }
+    // try looking it up one more time
+    themeUrl = scriptCache.get(theme);
+    if (themeUrl !== null) {
+        return themeUrl;
+    }
 
-  throw ERR_THEME_NOT_FOUND;
+    throw ERR_THEME_NOT_FOUND;
 }
 
 // gets and caches theme style
 function getThemeStyle(themeUrl) {
-  var scriptCache = CacheService.getScriptCache();
+    var scriptCache = CacheService.getScriptCache();
 //  var css = scriptCache.get(themeUrl);
-  var css = null;
-  if (css === null) {
-    var r = UrlFetchApp.fetch(themeUrl);
-    css = r.getContentText();
-      
-    // try to cache the css
-    try {
-      scriptCache.put(themeUrl, css);
-    } catch (e) {
-      logError('Failed to cache CSS', e);
-    }
-  }
+    var css = null;
+    if (css === null) {
+        var r = UrlFetchApp.fetch(themeUrl);
+        css = r.getContentText();
 
-  return css;
+        // try to cache the css
+        try {
+            scriptCache.put(themeUrl, css);
+        } catch (e) {
+            logError('Failed to cache CSS', e);
+        }
+    }
+
+    return css;
 }
 
 // top-level
@@ -297,32 +297,32 @@ function getThemeStyle(themeUrl) {
  */
 // todo: comment
 function insertCode(html, noBackground) {
-  try {
-    return insertCodeHelper(html, noBackground);
-  } catch (e) {
-    logError(ERR_FAILED_TO_INSERT, e);
-    throw ERR_FAILED_TO_INSERT;
-  }
+    try {
+        return insertCodeHelper(html, noBackground);
+    } catch (e) {
+        logError(ERR_FAILED_TO_INSERT, e);
+        throw ERR_FAILED_TO_INSERT;
+    }
 }
 
 function insertCodeHelper(html, noBackground) {
-  // save user preferences
-  var userProperties = PropertiesService.getUserProperties();
-  userProperties.setProperty(userProperties.noBackground, noBackground);
+    // save user preferences
+    var userProperties = PropertiesService.getUserProperties();
+    userProperties.setProperty(userProperties.noBackground, noBackground);
 
-  var selection = DocumentApp.getActiveDocument().getSelection();
-  if (selection) {
-    insertIntoSelection(selection, html, noBackground);
-  } else {
-    insertIntoCursor(html, noBackground);
-  }
+    var selection = DocumentApp.getActiveDocument().getSelection();
+    if (selection) {
+        insertIntoSelection(selection, html, noBackground);
+    } else {
+        insertIntoCursor(html, noBackground);
+    }
 }
 
 function buildThemeUrl(theme, version) {
-  if (version === undefined) {
-    version = HLJS_DEFAULT_VERSION;
-  }
-  return HLJS_CDN_URL_PRE + version + '/styles/' + theme + '.min.css';
+    if (version === undefined) {
+        version = HLJS_DEFAULT_VERSION;
+    }
+    return HLJS_CDN_URL_PRE + version + '/styles/' + theme + '.min.css';
 }
 
 // dummy method for button handlers
@@ -333,10 +333,10 @@ function stub() {
 
 // Helper function that puts external JS / CSS into the HTML file.
 function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename)
-      .getContent();
+    return HtmlService.createHtmlOutputFromFile(filename)
+        .getContent();
 }
 
 function logError(msg, error) {
-  Logger.log(msg + ': %s', error);
+    Logger.log(msg + ': %s', error);
 }

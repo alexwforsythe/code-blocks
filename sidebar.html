@@ -1,62 +1,62 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <base target="_top">
 
     <link rel="stylesheet" href="//ssl.gstatic.com/docs/script/css/add-ons1.css">
 
     <?!= include('sidebar.css.html'); ?>
-  </head>
-  <body>
-    <div class="sidebar branding-below">
-      <form>
+</head>
+<body>
+<div class="sidebar branding-below">
+    <form>
         <div class="block form-group" id="languages">
-          <label for="language">Language</label>
-          <select name="language" id="language" disabled="true">
-            <option value="auto" selected>auto</option>
-          </select>
+            <label for="language">Language</label>
+            <select name="language" id="language" disabled="true">
+                <option value="auto" selected>auto</option>
+            </select>
         </div>
 
         <div class="block form-group" id="themes">
-          <label for="theme">Theme</label>
-          <select name="theme" id="theme" disabled="true">
-            <option value="default" selected>default</option>
-          </select>
+            <label for="theme">Theme</label>
+            <select name="theme" id="theme" disabled="true">
+                <option value="default" selected>default</option>
+            </select>
         </div>
 
         <div class="block">
-          <input type="checkbox" id="no-background">
-          <label for="no-background">No background</label>
+            <input type="checkbox" id="no-background">
+            <label for="no-background">No background</label>
         </div>
 
         <div class="block">
-          <div class="block button-group" id="preview-buttons">
-            <button class="blue" id="show-preview" disabled="true">Preview</button>
-            <button id="insert-preview" disabled="true">Paste</button>
-          </div>
+            <div class="block button-group" id="preview-buttons">
+                <button class="blue" id="show-preview" disabled="true">Preview</button>
+                <button id="insert-preview" disabled="true">Paste</button>
+            </div>
         </div>
 
         <div class="block">
-          <pre id="preview"></pre>
+            <pre id="preview"></pre>
         </div>
 
         <div class="block button-group" id="highlight-buttons">
-          <button class="blue" id="highlight-selection" disabled="true">Highlight</button>
+            <button class="blue" id="highlight-selection" disabled="true">Highlight</button>
         </div>
-      </form>
-    </div>
+    </form>
+</div>
 
-    <div class="sidebar bottom">
-      <?!= include('logo.svg.html'); ?>
-      <span class="gray branding-text">Syntax highlighting for Google Docs</span>
-    </div>
+<div class="sidebar bottom">
+    <?!= include('logo.svg.html'); ?>
+    <span class="gray branding-text">Syntax highlighting for Google Docs</span>
+</div>
 
-    <!--
-    1. https://github.com/Automattic/juice
-    2. https://github.com/substack/node-browserify
-    3. https://github.com/circlecell/jscompress.com
-    -->
-    <?!= include('juice.min.js.html'); ?>
-    <?!= include('sidebar.js.html'); ?>
-  </body>
+<!--
+1. https://github.com/Automattic/juice
+2. https://github.com/substack/node-browserify
+3. https://github.com/circlecell/jscompress.com
+-->
+<?!= include('juice.min.js.html'); ?>
+<?!= include('sidebar.js.html'); ?>
+</body>
 </html>
