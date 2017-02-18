@@ -1,0 +1,10 @@
+{
+  "name": "code-blocks",
+  "repository": "https://github.com/alexwforsythe/code-blocks",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/google-apps-script": "0.0.11",
+    "tslint": "^4.4.2",
+    "typescript": "^2.1.6"
+  }
+}
