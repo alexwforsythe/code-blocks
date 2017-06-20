@@ -67,14 +67,14 @@
     });
 
     // callback function that populates language input options
-    function loadLanguages () {
+    function loadLanguages() {
         LANGUAGES.forEach(function (lang) {
             $(ID_LANGUAGE).append('<option value="' + lang + '">' + lang + '</option>');
         });
     }
 
     // callback function that populates theme input options
-    function loadThemes (themes, prefs) {
+    function loadThemes(themes, prefs) {
         const themeSelect = $(ID_THEME);
 
         // remove 'default', because its CSS is already in HTML as a fallback
@@ -95,7 +95,7 @@
      * @param {Object} prefs The saved preferences.
      * @param themes
      */
-    function loadPreferences (prefs, themes) {
+    function loadPreferences(prefs, themes) {
 //        console.log(LANGUAGES);
 //        console.log(themes);
 //        console.log(prefs);
@@ -128,7 +128,7 @@
         $(ID_SHOW_PREVIEW).prop('disabled', false);
     }
 
-    function replaceSpecialChars (html) {
+    function replaceSpecialChars(html) {
         html = html.replace(/\u2018|\u2019|\u201A|\uFFFD/g, "'")
             .replace(/\u201c|\u201d|\u201e/g, '"')
             .replace(/\u02C6/g, '^')
@@ -153,7 +153,7 @@
      * Runs a server-side function to translate the user-selected text and update
      * the sidebar UI with the resulting translation.
      */
-    function showPreview () {
+    function showPreview() {
         this.disabled = true;
         $(ID_ERROR).remove();
 
@@ -173,7 +173,7 @@
     }
 
     // callback function render preview block
-    function renderPreview (selection, css, language, noBackground) {
+    function renderPreview(selection, css, language, noBackground) {
         const block = createHighlightedBlock(selection, css, language, noBackground);
         const preview = $(ID_PREVIEW);
 
@@ -181,7 +181,7 @@
         $(ID_PASTE).prop('disabled', false);
     }
 
-    function createHighlightedBlock (text, css, language, noBackground) {
+    function createHighlightedBlock(text, css, language, noBackground) {
         const preview = $(ID_PREVIEW);
         var block = preview.clone();
 
@@ -196,7 +196,7 @@
         hljs.highlightBlock(block[0]); // todo: why [0]?
 
         var highlighted = block.outerHTML();
-        if (css != null) {
+        if (css !== null) {
             highlighted = juice.inlineContent(highlighted, css);
         }
 
@@ -209,7 +209,7 @@
     }
 
     // button function to highlight selection
-    function highlightSelection () {
+    function highlightSelection() {
         this.disabled = true;
         $(ID_ERROR).remove();
 
@@ -237,7 +237,7 @@
     }
 
     // button function to insert preview
-    function insertPreview () {
+    function insertPreview() {
         this.disabled = true;
         $(ID_ERROR).remove();
 
@@ -252,16 +252,19 @@
     }
 
     // success/failure callbacks
-    function defaultSuccess (result, element) {
+    //noinspection JSUnusedLocalSymbols
+    function defaultSuccess(result, element) {
         element.disabled = false;
     }
 
-    function focusEditor (result, element) {
+    //noinspection JSUnusedLocalSymbols
+    function focusEditor(result, element) {
         google.script.host.editor.focus();
         element.disabled = false;
     }
 
-    function showErrorThemes (msg, element) {
+    //noinspection JSUnusedLocalSymbols
+    function showErrorThemes(msg, element) {
         showError(msg, $('#themes'));
 //        element.disabled = false;
 
@@ -272,12 +275,12 @@
         $(ID_SHOW_PREVIEW).prop('disabled', false);
     }
 
-    function showErrorPreviewButtons (msg, element) {
+    function showErrorPreviewButtons(msg, element) {
         showError(msg, $(ID_PREVIEW_BUTTONS));
         element.disabled = false;
     }
 
-    function showErrorHighlightButtons (msg, element) {
+    function showErrorHighlightButtons(msg, element) {
         showError(msg, $(ID_HIGHLIGHT_BUTTONS));
         element.disabled = false;
     }
@@ -288,7 +291,7 @@
      * @param msg The error message to display.
      * @param element The element after which to display the error.
      */
-    function showError (msg, element) {
+    function showError(msg, element) {
         const div = $('<div id="error" class="error">' + msg + '</div>');
         $(element).after(div);
     }

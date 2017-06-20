@@ -4,12 +4,12 @@ const RGB_PATTERN = /^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i;
  * todo
  *
  * @param color
- * @returns {any}
+ * @returns {string}
  */
 function colorToHex(color) {
     color = color.toString();
     var isHex = color.indexOf('#') === 0;
-    if (isHex && color.length === '7') {
+    if (isHex && color.length === 7) {
         return color;
     }
 
@@ -49,7 +49,7 @@ function padHex(hex) {
             }).join('');
     }
 
-    var zeros = new Array(6 - hex.length + 1).join('0')
+    var zeros = new Array(6 - hex.length + 1).join('0');
     return '#' + zeros + hex;
 }
 

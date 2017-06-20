@@ -24,16 +24,20 @@ function getSelectedText() {
 
     var text = [];
     var elements = selection.getSelectedElements();
+    var element;
     for (var i = 0; i < elements.length; i++) {
         if (elements[i].isPartial()) {
             var e = elements[i],
                 startIndex = e.getStartOffset(),
-                endIndex = e.getEndOffsetInclusive(),
-                elementText = e.getElement().asText().getText().substring(startIndex, endIndex + 1);
+                endIndex = e.getEndOffsetInclusive();
+
+            elementText = e.getElement().asText()
+                .getText()
+                .substring(startIndex, endIndex + 1);
 
             text.push(elementText);
         } else {
-            var element = elements[i].getElement();
+            element = elements[i].getElement();
             if (element.editAsText) {
                 var elementText = element.asText().getText();
                 // todo: check if image gets here and is empty string
@@ -42,7 +46,7 @@ function getSelectedText() {
         }
     }
 
-    if (text.length == 0) {
+    if (text.length === 0) {
         throw ERR_SELECT_TEXT;
     }
 
@@ -80,13 +84,14 @@ function replaceSelection(selection, html, noBackground) {
             // clearText(parent);
             parent.clear();
 
+            var text;
             if (after !== '') {
-                var text = parent.insertText(0, after);
+                text = parent.insertText(0, after);
                 text.setAttributes(attrs);
             }
             if (!replaced) {
                 if (before === '' && after === '') {
-                    var table = appendTableWithHTML(parent, html, noBackground);
+                    appendTableWithHTML(parent, html, noBackground);
                     parent.removeFromParent();
                 } else {
                     insertHTMLAsText(parent, 0, html, noBackground);
@@ -94,7 +99,7 @@ function replaceSelection(selection, html, noBackground) {
                 replaced = true;
             }
             if (before !== '') {
-                var text = parent.insertText(0, before);
+                text = parent.insertText(0, before);
                 text.setAttributes(attrs);
             }
         } else {
@@ -146,12 +151,12 @@ function insertAtCursor(html, noBackground) {
 
     var parent = text.getParent();
     if (after !== '') {
-        var text = parent.insertText(0, after);
+        text = parent.insertText(0, after);
         text.setAttributes(attrs);
     }
     insertHTMLAsText(parent, 0, html, noBackground);
-    if (before != '') {
-        var text = parent.insertText(0, before);
+    if (before !== '') {
+        text = parent.insertText(0, before);
         text.setAttributes(attrs);
     }
 }
@@ -193,11 +198,13 @@ function insertHTMLAsText(element, index, html, noBackground, cell) {
 
     // set cell background color inserting a table
     if (cell !== undefined && !noBackground) {
-        style = root.getAttribute('style');
+        var style = root.getAttribute('style');
         var rootAttrs = addStyleAttrs({}, style);
         var cellAttrs = cell.getAttributes();
-        cellAttrs[DocumentApp.Attribute.BACKGROUND_COLOR] = rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
+        cellAttrs[DocumentApp.Attribute.BACKGROUND_COLOR] =
+            rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
         cell.setAttributes(cellAttrs);
+
         // todo: doesn't always work
         // cell.setBackgroundColor(rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR]);
     }
@@ -230,7 +237,7 @@ function insertNode(element, index, node, attrs, noBackground) {
 }
 
 function addStyleAttrs(attrs, attr, noBackground) {
-    if (attr == null) {
+    if (attr === null) {
         return attrs;
     }
 
@@ -240,7 +247,7 @@ function addStyleAttrs(attrs, attr, noBackground) {
     // Logger.log('styles: ' + styles);
     for (var i = 0; i < styles.length; i++) {
         var pieces = styles[i].split(':');
-        if (pieces.length == 2) {
+        if (pieces.length === 2) {
             addStyleAttr(attrs, pieces[0], pieces[1], noBackground);
         }
     }
@@ -269,22 +276,23 @@ function addStyleAttr(attrs, key, val, noBackground) {
             }
         case 'color':
             val = colorToHex(val);
+            break;
     }
 
     // everything else
-    attr = ATTRIBUTES[key];
+    var attr = ATTRIBUTES[key];
     if (attr !== undefined) {
         attrs[attr] = val;
     }
 }
 
-// helper function to deep copy doc text attributes
+// util function to deep copy doc text attributes
 function copyAttrs(attrs) {
     // todo: do literal copy if possible for performance
     return JSON.parse(JSON.stringify(attrs));
 }
 
-// helper function to remove an element
+// util function to remove an element
 function removeElement(element) {
     // Logger.log('removing element');
 
@@ -301,7 +309,7 @@ function removeElement(element) {
     clearText(element);
 }
 
-// helper functional to clear all text from an element
+// util function to clear all text from an element
 function clearText(element) {
     // Logger.log('clearing text');
 

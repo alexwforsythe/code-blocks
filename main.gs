@@ -35,6 +35,7 @@ const ERR_THEME_NOT_FOUND = "Couldn't get theme.";
  * presented to users will reflect this limited scope.
  */
 
+//noinspection JSUnusedLocalSymbols
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
  *
@@ -48,6 +49,7 @@ function onOpen(e) {
         .addToUi();
 }
 
+//noinspection JSUnusedGlobalSymbols
 /**
  * Runs when the add-on is installed.
  *
@@ -67,7 +69,7 @@ function onInstall(e) {
 function showSidebar() {
     var ui = HtmlService.createTemplateFromFile('sidebar').evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-        .setTitle(TITLE)
+        .setTitle(TITLE);
 
     DocumentApp.getUi().showSidebar(ui);
 }
@@ -98,7 +100,7 @@ function getPreferences() {
             noBackground: userProperties.getProperty(PROPERTY_NO_BACKGROUND)
         };
     } catch (e) {
-        logError(ERR_USER_PREFERENCES, e);
+        logError(ERR_GETTING_USER_PREFERENCES, e);
         throw ERR_GETTING_USER_PREFERENCES;
     }
 }
@@ -110,52 +112,51 @@ function getPreferences() {
  */
 function getThemes() {
     try {
-        return getThemesHelper();
+        return execute();
     } catch (e) {
         logError(ERR_GETTING_THEMES, e);
         throw ERR_GETTING_THEMES;
     }
-}
 
-function getThemesHelper() {
-    // try to get urls from cache
-    var scriptCache = CacheService.getScriptCache();
-//  scriptCache.remove(KEY_THEME_URLS);
-    var themeUrls = scriptCache.get(KEY_THEME_URLS);
+    function execute() {
+        // try to get urls from cache
+        var scriptCache = CacheService.getScriptCache();
+        // scriptCache.remove(KEY_THEME_URLS);
+        var themeUrls = scriptCache.get(KEY_THEME_URLS);
 
-    if (themeUrls !== null) {
-        // data in the cache must be stored as a string
-        themeUrls = JSON.parse(themeUrls);
-    } else {
-        // try cdnjs
-        try {
-            themeUrls = getThemesFromCdnjs();
-        } catch (e) {
-            logError(ERR_GETTING_THEMES, e);
-            // try github
+        if (themeUrls !== null) {
+            // data in the cache must be stored as a string
+            themeUrls = JSON.parse(themeUrls);
+        } else {
+            // try cdnjs
             try {
-                themeUrls = getThemesFromGh();
-            } catch (e2) {
-                logError(ERR_GETTING_THEMES, e2);
-                throw ERR_GETTING_THEMES;
+                themeUrls = getThemesFromCdnjs();
+            } catch (e) {
+                logError(ERR_GETTING_THEMES, e);
+                // try github
+                try {
+                    themeUrls = getThemesFromGh();
+                } catch (e2) {
+                    logError(ERR_GETTING_THEMES, e2);
+                    throw ERR_GETTING_THEMES;
+                }
             }
+
+            // cache the theme urls
+            scriptCache.put(KEY_THEME_URLS, JSON.stringify(themeUrls), DEFAULT_TTL);
+
+            // cache each url individually for faster lookup
+            scriptCache.putAll(themeUrls, DEFAULT_TTL + 10);
         }
 
-        // cache the theme urls
-        scriptCache.put(KEY_THEME_URLS, JSON.stringify(themeUrls), DEFAULT_TTL);
+        // cache default theme, because it contains the base css
+        var defaultUrl = themeUrls[THEME_DEFAULT];
+        if (defaultUrl !== undefined) {
+            getThemeStyle(defaultUrl);
+        }
 
-        // cache each url individually for faster lookup
-        scriptCache.putAll(themeUrls, DEFAULT_TTL + 10);
+        return Object.keys(themeUrls);
     }
-
-    // cache default theme, because it contains the base css
-    var defaultUrl = themeUrls[THEME_DEFAULT];
-    if (defaultUrl !== undefined) {
-        getThemeStyle(defaultUrl);
-    }
-
-    var themes = Object.keys(themeUrls);
-    return themes;
 }
 
 function getThemesFromCdnjs() {
@@ -182,7 +183,8 @@ function getThemesFromCdnjs() {
     var themeUrls = {};
     for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        if (file.indexOf('styles') === 0 && file.indexOf('.css', file.length - 4) !== -1) {
+        if (file.indexOf('styles') === 0 &&
+            file.indexOf('.css', file.length - 4) !== -1) {
             var theme = file.split('styles/').pop().split('.')[0];
             if (theme !== undefined) {
                 themeUrls[theme] = buildThemeUrl(theme, version);
@@ -201,7 +203,9 @@ function getThemesFromGh() {
     var result = {};
     for (var i = 0; i < data.length; i++) {
         var entry = data[i];
-        if (entry.type === 'file' && entry.name !== undefined && entry.name.indexOf('.css', file.length - 4) !== -1) {
+        if (entry.type === 'file' &&
+            entry.name !== undefined &&
+            entry.name.indexOf('.css', file.length - 4) !== -1) {
             var theme = entry.name.split('.')[0];
             // to function
             if (theme !== undefined) {
@@ -256,8 +260,7 @@ function getSelectionAndThemeStyle(language, theme, noBackground) {
     result.css = getThemeStyle(themeUrl);
 
     var text = getSelectedText();
-    selection = text.join('\n');
-    result['selection'] = selection;
+    result['selection'] = text.join('\n');
 
     return result;
 }
@@ -284,6 +287,7 @@ function getThemeUrl(theme) {
 // gets and caches theme style
 function getThemeStyle(themeUrl) {
     var scriptCache = CacheService.getScriptCache();
+    // todo: debug?
 //  var css = scriptCache.get(themeUrl);
     var css = null;
     if (css === null) {
@@ -320,23 +324,23 @@ function getThemeStyle(themeUrl) {
  */
 function insertCode(html, noBackground) {
     try {
-        return insertCodeHelper(html, noBackground);
+        return execute(html, noBackground);
     } catch (e) {
         logError(ERR_FAILED_TO_INSERT, e);
         throw ERR_FAILED_TO_INSERT;
     }
-}
 
-function insertCodeHelper(html, noBackground) {
-    // save user preferences
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty(userProperties.noBackground, noBackground);
+    function execute(html, noBackground) {
+        // save user preferences
+        var userProperties = PropertiesService.getUserProperties();
+        userProperties.setProperty(userProperties.noBackground, noBackground);
 
-    var selection = DocumentApp.getActiveDocument().getSelection();
-    if (selection) {
-        replaceSelection(selection, html, noBackground);
-    } else {
-        insertAtCursor(html, noBackground);
+        var selection = DocumentApp.getActiveDocument().getSelection();
+        if (selection) {
+            replaceSelection(selection, html, noBackground);
+        } else {
+            insertAtCursor(html, noBackground);
+        }
     }
 }
 
@@ -347,16 +351,9 @@ function buildThemeUrl(theme, version) {
     return HLJS_CDN_URL_PRE + version + '/styles/' + theme + '.min.css';
 }
 
-// dummy method for button handlers
-// for some reason, click-bound functions will violate sandbox rules
-// unless passed through the server
-function stub() {
-}
-
 // Helper function that puts external JS / CSS into the HTML file.
 function include(filename) {
-    return HtmlService.createHtmlOutputFromFile(filename)
-        .getContent();
+    return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
 function logError(msg, error) {
