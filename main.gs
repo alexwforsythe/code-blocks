@@ -48,7 +48,8 @@ function showSidebar() {
 }
 
 /**
- * todo
+ * todo: doc
+ * todo: find a way to document exposed functions vs lib functions
  *
  * @returns {{themes: string[], prefs: {language: string, theme: string, noBackground: string}}}
  */
@@ -152,14 +153,12 @@ function getThemesFromCdnjs(callback) {
             file.indexOf('.css', file.length - 4) !== -1;
     });
 
-    var themeUrls = {};
-    // todo: use map?
-    cssPaths.forEach(function setThemeUrl(file) {
-        var theme = file.split('styles/').pop().split('.')[0];
+    var themeUrls = cssPaths.reduce(function toUrl(result, path) {
+        var theme = path.split('styles/').pop().split('.')[0];
         if (theme) {
-            themeUrls[theme] = buildThemeUrl(theme, version);
+            result[theme] = buildThemeUrl(theme, version);
         }
-    });
+    }, {});
 
     return callback(null, themeUrls);
 }
@@ -181,14 +180,12 @@ function getThemesFromGh(callback) {
             entry.name.indexOf('.css', file.length - 4) !== -1;
     });
 
-    var themeUrls = {};
-    // todo: use map?
-    cssEntries.forEach(function setThemeUrl(entry) {
+    var themeUrls = cssEntries.reduce(function toUrl(result, entry) {
         var theme = entry.name.split('.')[0];
         if (theme) {
             themeUrls[theme] = buildThemeUrl(theme);
         }
-    });
+    }, {});
 
     return callback(null, themeUrls);
 }
