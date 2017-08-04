@@ -1,30 +1,3 @@
-// add-on title
-const TITLE = 'Code Blocks';
-
-// highlight.js config
-const HLJS_USE_LATEST = false;
-const HLJS_DEFAULT_VERSION = '9.7.0';
-const HLJS_CDNJS_URL = 'https://api.cdnjs.com/libraries/highlight.js';
-const HLJS_CDN_URL_PRE = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/';
-const HLJS_GH_BUILD_URL = 'https://api.github.com/repos/highlightjs/cdn-release/contents/build';
-const HLJS_GH_THEMES_URL = HLJS_GH_BUILD_URL + '/styles?ref=master';
-const THEME_DEFAULT = 'default';
-
-// user preferences
-const PROPERTY_LANGUAGE = 'language';
-const PROPERTY_THEME = 'theme';
-const PROPERTY_NO_BACKGROUND = 'no_background';
-
-// cache config
-const DEFAULT_TTL = 3600;
-const KEY_THEME_URLS = 'theme_urls';
-
-// errors
-const ERR_FAILED_TO_INSERT = "Can't insert here.";
-const ERR_GETTING_USER_PREFERENCES = "Couldn't get user preferences.";
-const ERR_GETTING_THEMES = "Couldn't get themes.";
-const ERR_THEME_NOT_FOUND = "Couldn't get theme.";
-
 /**
  * @OnlyCurrentDoc
  *
@@ -69,7 +42,7 @@ function onInstall(e) {
 function showSidebar() {
     var ui = HtmlService.createTemplateFromFile('sidebar').evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-        .setTitle(TITLE);
+        .setTitle(config.title);
 
     DocumentApp.getUi().showSidebar(ui);
 }
@@ -94,15 +67,16 @@ function getPreferencesAndThemes() {
 function getPreferences() {
     try {
         var userProperties = PropertiesService.getUserProperties();
-        return {
-            language: userProperties.getProperty(PROPERTY_LANGUAGE),
-            theme: userProperties.getProperty(PROPERTY_THEME),
-            noBackground: userProperties.getProperty(PROPERTY_NO_BACKGROUND)
-        };
-    } catch (e) {
-        logError(ERR_GETTING_USER_PREFERENCES, e);
-        throw ERR_GETTING_USER_PREFERENCES;
+    } catch (err) {
+        logError(constants.errors.getUserPreferences, err);
+        throw constants.errors.getUserPreferences;
     }
+
+    return {
+        language: userProperties.getProperty(constants.props.language),
+        theme: userProperties.getProperty(constants.props.theme),
+        noBackground: userProperties.getProperty(constants.props.noBackground)
+    };
 }
 
 /**
@@ -111,110 +85,112 @@ function getPreferences() {
  * @returns {string[]}
  */
 function getThemes() {
-    try {
-        return execute();
-    } catch (e) {
-        logError(ERR_GETTING_THEMES, e);
-        throw ERR_GETTING_THEMES;
-    }
+    // first, try to get urls from the script cache
+    var scriptCache = CacheService.getScriptCache();
+    var themeUrls = scriptCache.get(constants.cache.themeUrlsKey);
 
-    function execute() {
-        // try to get urls from cache
-        var scriptCache = CacheService.getScriptCache();
-        // scriptCache.remove(KEY_THEME_URLS);
-        var themeUrls = scriptCache.get(KEY_THEME_URLS);
-
-        if (themeUrls !== null) {
-            // data in the cache must be stored as a string
-            themeUrls = JSON.parse(themeUrls);
-        } else {
-            // try cdnjs
-            try {
-                themeUrls = getThemesFromCdnjs();
-            } catch (e) {
-                logError(ERR_GETTING_THEMES, e);
-                // try github
-                try {
-                    themeUrls = getThemesFromGh();
-                } catch (e2) {
-                    logError(ERR_GETTING_THEMES, e2);
-                    throw ERR_GETTING_THEMES;
-                }
-            }
-
-            // cache the theme urls
-            scriptCache.put(KEY_THEME_URLS, JSON.stringify(themeUrls), DEFAULT_TTL);
-
-            // cache each url individually for faster lookup
-            scriptCache.putAll(themeUrls, DEFAULT_TTL + 10);
-        }
-
-        // cache default theme, because it contains the base css
-        var defaultUrl = themeUrls[THEME_DEFAULT];
-        if (defaultUrl !== undefined) {
-            getThemeStyle(defaultUrl);
-        }
-
+    if (themeUrls) {
+        themeUrls = JSON.parse(themeUrls);
+        // todo: necessary?
+        cacheDefaultThemeCSS(themeUrls);
         return Object.keys(themeUrls);
     }
+
+    getThemesFromCdnjs(function onGetThemes(err, themeUrls) {
+        if (err) {
+            logError(constants.errors.getThemes, err);
+            throw constants.errors.getThemes;
+        }
+
+        // cache the theme urls
+        // data in the cache is stored as a string
+        scriptCache.put(
+            constants.cache.themeUrlsKey,
+            JSON.stringify(themeUrls),
+            config.cache.defaultTtl
+        );
+
+        // cache each url individually for faster lookup
+        scriptCache.putAll(themeUrls, config.cache.defaultTtl + 10);
+        cacheDefaultThemeCSS(themeUrls);
+
+        return Object.keys(themeUrls);
+    });
 }
 
-function getThemesFromCdnjs() {
-    var r = UrlFetchApp.fetch(HLJS_CDNJS_URL);
-    var jsn = r.getContentText();
-    var data = JSON.parse(jsn);
+function cacheDefaultThemeCSS(themeUrls) {
+    // cache default theme, because it contains the base css
+    var defaultUrl = themeUrls[constants.themes.default];
+    if (defaultUrl) {
+        getThemeStyle(defaultUrl);
+    }
+}
 
-    var version;
-    if (HLJS_USE_LATEST === true) {
-        version = data.version;
-    } else {
-        version = HLJS_DEFAULT_VERSION;
+function getThemesFromCdnjs(callback) {
+    try {
+        var resp = UrlFetchApp.fetch(config.hljs.urls.cdnjsLib);
+    } catch (err) {
+        logError(constants.errors.getThemes, err);
+        return getThemesFromGh(next);
     }
-    var assets = data.assets;
-    var latest = assets[0];
-    for (var i = 1; i < assets.length; i++) {
-        if (assets[i].version === version) {
-            latest = assets[i];
-            break;
-        }
-    }
-    var files = latest.files;
+
+    var respJson = resp.getContentText();
+    var respData = JSON.parse(respJson);
+    var assets = respData['assets'];
+
+    // get the latest version in assets
+    var version = config.hljs.useLatest ?
+        respData.version :
+        config.hljs.defaultVersion;
+    var hasLatest = assets.some(function matches(asset) {
+        return asset.version === version;
+    });
+    var latest = hasLatest ? version : assets[0];
+
+    var cssPaths = latest.files.filter(function isCssPath(file) {
+        return file.indexOf('styles') === 0 &&
+            file.indexOf('.css', file.length - 4) !== -1;
+    });
 
     var themeUrls = {};
-    for (var i = 0; i < files.length; i++) {
-        var file = files[i];
-        if (file.indexOf('styles') === 0 &&
-            file.indexOf('.css', file.length - 4) !== -1) {
-            var theme = file.split('styles/').pop().split('.')[0];
-            if (theme !== undefined) {
-                themeUrls[theme] = buildThemeUrl(theme, version);
-            }
+    // todo: use map?
+    cssPaths.forEach(function setThemeUrl(file) {
+        var theme = file.split('styles/').pop().split('.')[0];
+        if (theme) {
+            themeUrls[theme] = buildThemeUrl(theme, version);
         }
-    }
+    });
 
-    return themeUrls;
+    return callback(null, themeUrls);
 }
 
-function getThemesFromGh() {
-    var r = UrlFetchApp.fetch(HLJS_GH_THEMES_URL);
-    var jsn = r.getContentText();
-    var data = JSON.parse(jsn);
-
-    var result = {};
-    for (var i = 0; i < data.length; i++) {
-        var entry = data[i];
-        if (entry.type === 'file' &&
-            entry.name !== undefined &&
-            entry.name.indexOf('.css', file.length - 4) !== -1) {
-            var theme = entry.name.split('.')[0];
-            // to function
-            if (theme !== undefined) {
-                result[theme] = buildThemeUrl(theme);
-            }
-        }
+function getThemesFromGh(callback) {
+    try {
+        var resp = UrlFetchApp.fetch(config.hljs.urls.ghThemes);
+    } catch (err) {
+        logError(constants.errors.getThemes, err);
+        callback(constants.errors.getThemes);
     }
 
-    return result;
+    var respJson = resp.getContentText();
+    var respData = JSON.parse(respJson);
+
+    var cssEntries = respData.filter(function isCssEntry(entry) {
+        return entry.type === 'file' &&
+            entry.name &&
+            entry.name.indexOf('.css', file.length - 4) !== -1;
+    });
+
+    var themeUrls = {};
+    // todo: use map?
+    cssEntries.forEach(function setThemeUrl(entry) {
+        var theme = entry.name.split('.')[0];
+        if (theme) {
+            themeUrls[theme] = buildThemeUrl(theme);
+        }
+    });
+
+    return callback(null, themeUrls);
 }
 
 /**
@@ -232,6 +208,7 @@ function getThemesFromGh() {
  *     translation.
  */
 
+// noinspection JSUnusedGlobalSymbols
 /**
  * todo
  *
@@ -243,62 +220,59 @@ function getThemesFromGh() {
 function getSelectionAndThemeStyle(language, theme, noBackground) {
     // save user preferences
     var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty(PROPERTY_LANGUAGE, language);
-    userProperties.setProperty(PROPERTY_THEME, theme);
-    userProperties.setProperty(PROPERTY_NO_BACKGROUND, noBackground);
+    userProperties.setProperty(constants.props.language, language);
+    userProperties.setProperty(constants.props.theme, theme);
+    userProperties.setProperty(constants.props.noBackground, noBackground);
 
-    var result = {'css': ''};
-    var scriptCache = CacheService.getScriptCache();
+    // prepend default css for all themes
+    var defaultThemeUrl = getThemeUrl(constants.themes.default);
+    var css = getThemeStyle(defaultThemeUrl);
 
-    // prepend default css for other themes
-    var themeUrl;
-    if (theme !== THEME_DEFAULT) {
-        themeUrl = getThemeUrl(THEME_DEFAULT);
-        result.css += getThemeStyle(themeUrl);
+    if (theme !== constants.themes.default) {
+        var themeUrl = getThemeUrl(theme);
+        css += getThemeStyle(themeUrl);
     }
-    themeUrl = getThemeUrl(theme);
-    result.css = getThemeStyle(themeUrl);
 
     var text = getSelectedText();
-    result['selection'] = text.join('\n');
+    var selection = text.join('\n');
 
-    return result;
+    return {
+        css: css,
+        selection: selection
+    };
 }
 
 function getThemeUrl(theme) {
     var scriptCache = CacheService.getScriptCache();
     var themeUrl = scriptCache.get(theme);
-    if (themeUrl !== null) {
-        return themeUrl;
+
+    if (!themeUrl) {
+        // themeUrls might have expired, try fetching them again
+        getThemes();
+        themeUrl = scriptCache.get(theme);
     }
 
-    // themeUrls might have expired, try fetching them again
-    getThemes();
-
-    // try looking it up one more time
-    themeUrl = scriptCache.get(theme);
-    if (themeUrl !== null) {
-        return themeUrl;
+    if (!themeUrl) {
+        throw constants.errors.themeNotFound;
     }
 
-    throw ERR_THEME_NOT_FOUND;
+    return themeUrl;
 }
 
 // gets and caches theme style
 function getThemeStyle(themeUrl) {
     var scriptCache = CacheService.getScriptCache();
-    // todo: debug?
-//  var css = scriptCache.get(themeUrl);
-    var css = null;
-    if (css === null) {
-        var r = UrlFetchApp.fetch(themeUrl);
-        css = r.getContentText();
+    var css = scriptCache.get(themeUrl);
+
+    if (!css) {
+        var resp = UrlFetchApp.fetch(themeUrl);
+        css = resp.getContentText();
 
         // try to cache the css
         try {
             scriptCache.put(themeUrl, css);
-        } catch (e) {
-            logError('Failed to cache CSS', e);
+        } catch (err) {
+            logError(constants.errors.cacheCss, err);
         }
     }
 
@@ -315,6 +289,7 @@ function getThemeStyle(themeUrl) {
  * @param {string} html The HTML with which to replace the current selection.
  */
 
+// noinspection JSUnusedGlobalSymbols
 /**
  * todo
  *
@@ -324,16 +299,9 @@ function getThemeStyle(themeUrl) {
  */
 function insertCode(html, noBackground) {
     try {
-        return execute(html, noBackground);
-    } catch (e) {
-        logError(ERR_FAILED_TO_INSERT, e);
-        throw ERR_FAILED_TO_INSERT;
-    }
-
-    function execute(html, noBackground) {
         // save user preferences
-        var userProperties = PropertiesService.getUserProperties();
-        userProperties.setProperty(userProperties.noBackground, noBackground);
+        var userProps = PropertiesService.getUserProperties();
+        userProps.setProperty(constants.props.noBackground, noBackground);
 
         var selection = DocumentApp.getActiveDocument().getSelection();
         if (selection) {
@@ -341,21 +309,28 @@ function insertCode(html, noBackground) {
         } else {
             insertAtCursor(html, noBackground);
         }
+    } catch (err) {
+        logError(constants.errors.insert, err);
+        throw constants.errors.insert;
     }
 }
 
 function buildThemeUrl(theme, version) {
-    if (version === undefined) {
-        version = HLJS_DEFAULT_VERSION;
-    }
-    return HLJS_CDN_URL_PRE + version + '/styles/' + theme + '.min.css';
+    return version ?
+        config.hljs.urls.cdnjsStyles + version + '/styles/' + theme + '.min.css' :
+        config.hljs.defaultVersion;
 }
 
-// Helper function that puts external JS / CSS into the HTML file.
+// noinspection JSUnusedGlobalSymbols
+/**
+ * Helper function that puts external JS / CSS into the HTML file.
+ * @param {string} filename
+ * @returns {string}
+ */
 function include(filename) {
     return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
-function logError(msg, error) {
-    Logger.log(msg + ': %s', error);
+function logError(msg, err) {
+    Logger.log(msg + ': %s', err);
 }

@@ -3,7 +3,11 @@ const RGB_PATTERN = /^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i;
 /**
  * todo
  *
- * @param color
+ * Converts a color of type RGB or any variety of hex to a hex string
+ * representation of that color. This function is used to get hex colors
+ * to use in HTML tags.
+ *
+ * @param {string} color
  * @returns {string}
  */
 function colorToHex(color) {
@@ -23,8 +27,8 @@ function colorToHex(color) {
         return COLORS[color];
     }
 
-    var hex = [1, 2, 3].map(function (i) {
-        return parseInt(nums[i], 10).toString(16);
+    var hex = nums.map(function (i) {
+        return parseInt(i, 10).toString(16);
     }).join('');
 
     return padHex(hex);

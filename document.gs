@@ -1,15 +1,3 @@
-// a map of css attributes to document attributes
-const ATTRIBUTES = {
-    'background': DocumentApp.Attribute.BACKGROUND_COLOR,
-    'bold': DocumentApp.Attribute.BOLD,
-    'color': DocumentApp.Attribute.FOREGROUND_COLOR,
-    'italic': DocumentApp.Attribute.ITALIC,
-    'line-through': DocumentApp.Attribute.STRIKETHROUGH,
-    'underline': DocumentApp.Attribute.UNDERLINE
-};
-
-const ERR_SELECT_TEXT = 'Please select some text.';
-
 /**
  * Gets the text the user has selected. If there is no selection,
  * this function displays an error message.
@@ -19,38 +7,37 @@ const ERR_SELECT_TEXT = 'Please select some text.';
 function getSelectedText() {
     var selection = DocumentApp.getActiveDocument().getSelection();
     if (!selection) {
-        throw ERR_SELECT_TEXT;
+        throw constants.errors.selectText;
     }
 
-    var text = [];
+    var result = [];
     var elements = selection.getSelectedElements();
-    var element;
-    for (var i = 0; i < elements.length; i++) {
-        if (elements[i].isPartial()) {
-            var e = elements[i],
-                startIndex = e.getStartOffset(),
-                endIndex = e.getEndOffsetInclusive();
+    // todo: use map?
+    elements.forEach(function(e) {
+        if (e.isPartial()) {
+            var startIndex = e.getStartOffset();
+            var endIndex = e.getEndOffsetInclusive();
 
-            elementText = e.getElement().asText()
+            text = e.getElement().asText()
                 .getText()
                 .substring(startIndex, endIndex + 1);
 
-            text.push(elementText);
+            result.push(text);
         } else {
-            element = elements[i].getElement();
+            var element = e.getElement();
             if (element.editAsText) {
-                var elementText = element.asText().getText();
+                var text = element.asText().getText();
                 // todo: check if image gets here and is empty string
-                text.push(elementText);
+                result.push(text);
             }
         }
+    });
+
+    if (result.length === 0) {
+        throw constants.errors.selectText;
     }
 
-    if (text.length === 0) {
-        throw ERR_SELECT_TEXT;
-    }
-
-    return text;
+    return result;
 }
 
 /**
@@ -66,7 +53,7 @@ function replaceSelection(selection, html, noBackground) {
 
     for (var i = elements.length - 1; i >= 0; i--) {
         var rangeElement = elements[i];
-        var element = rangeElement.getElement();
+        var e = rangeElement.getElement();
 
         // Logger.log(i);
         // Logger.log('rangeElement: ' + rangeElement + ', isPartial: ' + rangeElement.isPartial());
@@ -74,23 +61,23 @@ function replaceSelection(selection, html, noBackground) {
 
         if (rangeElement.isPartial()) {
             // Logger.log('parent type: ' + rangeElement.getElement().getParent().getType());
-            var start = rangeElement.getStartOffset(),
-                end = rangeElement.getEndOffsetInclusive(),
-                before = element.editAsText().getText().substring(0, start),
-                after = element.editAsText().getText().substring(end + 1),
-                parent = element.getParent(),
-                attrs = parent.getAttributes();
+            var start = rangeElement.getStartOffset();
+            var end = rangeElement.getEndOffsetInclusive();
+            var before = e.editAsText().getText().substring(0, start);
+            var after = e.editAsText().getText().substring(end + 1);
+            var parent = e.getParent();
+            var attrs = parent.getAttributes();
 
             // clearText(parent);
             parent.clear();
 
             var text;
-            if (after !== '') {
+            if (after) {
                 text = parent.insertText(0, after);
                 text.setAttributes(attrs);
             }
             if (!replaced) {
-                if (before === '' && after === '') {
+                if (!before && !after) {
                     appendTableWithHTML(parent, html, noBackground);
                     parent.removeFromParent();
                 } else {
@@ -98,22 +85,23 @@ function replaceSelection(selection, html, noBackground) {
                 }
                 replaced = true;
             }
-            if (before !== '') {
+            if (before) {
                 text = parent.insertText(0, before);
                 text.setAttributes(attrs);
             }
         } else {
-            if (element.getType() === DocumentApp.ElementType.TEXT) {
-                logError(ERR_FAILED_TO_INSERT, 'text element should not be a container');
-                throw ERR_FAILED_TO_INSERT;
+            if (e.getType() === DocumentApp.ElementType.TEXT) {
+                var msg = 'text element should not be a container';
+                logError(constants.errors.insert, msg);
+                throw constants.errors.insert;
             }
 
             if (!replaced) {
-                appendTableWithHTML(element, html, noBackground);
-                removeElement(element);
+                appendTableWithHTML(e, html, noBackground);
+                removeElement(e);
                 replaced = true;
             } else {
-                removeElement(element);
+                removeElement(e);
             }
         }
     }
@@ -136,26 +124,27 @@ function insertAtCursor(html, noBackground) {
         return;
     }
 
-    var surroundingText = cursor.getSurroundingText(),
-        surroundingTextOffset = cursor.getSurroundingTextOffset(),
-        surroundingString = surroundingText.getText(),
-        attrs = surroundingText.getAttributes(),
-        before = surroundingString.substring(0, surroundingTextOffset),
-        after = surroundingString.substring(surroundingTextOffset);
+    var surroundingText = cursor.getSurroundingText();
+    var surroundingTextOffset = cursor.getSurroundingTextOffset();
+    var surroundingString = surroundingText.getText();
+    var attrs = surroundingText.getAttributes();
+    var before = surroundingString.substring(0, surroundingTextOffset);
+    var after = surroundingString.substring(surroundingTextOffset);
 
     clearText(element);
 
     // create temporary text to get access to text interface
+    // todo: hacky
     var text = cursor.insertText('temp');
     clearText(text);
 
     var parent = text.getParent();
-    if (after !== '') {
+    if (after) {
         text = parent.insertText(0, after);
         text.setAttributes(attrs);
     }
     insertHTMLAsText(parent, 0, html, noBackground);
-    if (before !== '') {
+    if (before) {
         text = parent.insertText(0, before);
         text.setAttributes(attrs);
     }
@@ -180,12 +169,8 @@ function appendTableWithHTML(element, html, noBackground) {
 }
 
 function insertHTMLAsText(element, index, html, noBackground, cell) {
-    var block = XmlService.parse(html);
-    // var output = XmlService.getPrettyFormat().format(block);
-    // Logger.log('block: ' + output);
-
     var attrs = {};
-    attrs[DocumentApp.Attribute.FONT_FAMILY] = 'Consolas';
+    attrs[DocumentApp.Attribute.FONT_FAMILY] = constants.document.fonts.consolas;
 
     // disable font style attrs by default so they don't carry over to new elements
     // todo: might not be necessary now that we're handling it up the stack
@@ -194,10 +179,13 @@ function insertHTMLAsText(element, index, html, noBackground, cell) {
     attrs[DocumentApp.Attribute.UNDERLINE] = false;
     attrs[DocumentApp.Attribute.STRIKETHROUGH] = false;
 
+    var block = XmlService.parse(html);
+    // var output = XmlService.getPrettyFormat().format(block);
+    // Logger.log('block: ' + output);
     var root = block.getRootElement();
 
     // set cell background color inserting a table
-    if (cell !== undefined && !noBackground) {
+    if (cell && !noBackground) {
         var style = root.getAttribute('style');
         var rootAttrs = addStyleAttrs({}, style);
         var cellAttrs = cell.getAttributes();
@@ -237,6 +225,7 @@ function insertNode(element, index, node, attrs, noBackground) {
 }
 
 function addStyleAttrs(attrs, attr, noBackground) {
+    // todo: really null?
     if (attr === null) {
         return attrs;
     }
@@ -245,12 +234,14 @@ function addStyleAttrs(attrs, attr, noBackground) {
     var style = attr.getValue();
     var styles = style.split(';');
     // Logger.log('styles: ' + styles);
-    for (var i = 0; i < styles.length; i++) {
-        var pieces = styles[i].split(':');
+    styles.forEach(function addStyle(style) {
+        var pieces = style.split(':');
         if (pieces.length === 2) {
-            addStyleAttr(attrs, pieces[0], pieces[1], noBackground);
+            var key = pieces[0];
+            var val = pieces[1];
+            addStyleAttr(attrs, key, val, noBackground);
         }
-    }
+    });
 
     return attrs;
 }
@@ -265,8 +256,8 @@ function addStyleAttr(attrs, key, val, noBackground) {
         case 'font-weight':
         case 'font-style':
         case 'text-decoration':
-            attr = ATTRIBUTES[val];
-            if (attr !== undefined) {
+            attr = constants.document.attrs[val];
+            if (attr) {
                 attrs[attr] = true;
             }
             return;
@@ -274,14 +265,15 @@ function addStyleAttr(attrs, key, val, noBackground) {
             if (noBackground) {
                 return;
             }
+            break;
         case 'color':
             val = colorToHex(val);
             break;
     }
 
     // everything else
-    var attr = ATTRIBUTES[key];
-    if (attr !== undefined) {
+    var attr = constants.document.attrs[key];
+    if (attr) {
         attrs[attr] = val;
     }
 }
@@ -315,9 +307,9 @@ function clearText(element) {
 
     if (element.editAsText) {
         var text = element.editAsText();
-        var len = text.getText().length;
-        if (len > 0) {
-            return text.deleteText(0, len - 1);
+        var textLen = text.getText().length;
+        if (textLen > 0) {
+            return text.deleteText(0, textLen - 1);
         }
     }
 }
