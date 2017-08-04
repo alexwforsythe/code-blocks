@@ -9,6 +9,7 @@
     "juice": "^4.1.0"
   },
   "scripts": {
-    "build": "browserify sidebar.js -o bundle.js"
+    "build": "browserify sidebar.js -o bundle.js",
+    "postbuild": "./post_build.sh"
   }
 }
