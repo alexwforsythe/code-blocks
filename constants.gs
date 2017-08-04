@@ -18,8 +18,10 @@ const constants = {
     themes: {
         default: 'default'
     },
-    // a map of css attributes to document attributes
     document: {
+        /**
+         * A map of CSS attributes to document attributes
+         */
         attrs: {
             background: DocumentApp.Attribute.BACKGROUND_COLOR,
             bold: DocumentApp.Attribute.BOLD,
