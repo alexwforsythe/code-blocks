@@ -1,4 +1,4 @@
 .idea
 node_modules
 .gas
-bundle.min.js
+client/bundle.min.js

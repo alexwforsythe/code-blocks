@@ -11,7 +11,7 @@
     "uglifyify": "^4.0.3"
   },
   "scripts": {
-    "build": "browserify -t 'uglifyify' sidebar.js | uglifyjs > bundle.min.js",
+    "build": "browserify -t 'uglifyify' client/sidebar.js | uglifyjs > client/bundle.min.js",
     "postbuild": "./post_build.sh"
   }
 }
