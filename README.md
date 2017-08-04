@@ -26,16 +26,6 @@ Settings:
         3. Select `google-apps-script-DefinitelyTyped`
         4. Click `Download and Install`
 
-## Attributions
-
-* [highlight.js](https://github.com/isagalaev/highlight.js)
-* [juice](https://github.com/Automattic/juice)
-* [browserify](https://github.com/substack/node-browserify)
-* [UglifyJS 2](https://github.com/mishoo/UglifyJS2)
-* [jQuery](https://github.com/jquery/jquery)
-* [Google](https://developers.google.com/apps-script/add-ons/css)
-* [node-googe-apps-script](https://github.com/danthareja/node-google-apps-script)
-
 ## Resources
 
 * https://gsuite-developers.googleblog.com/2015/12/advanced-development-process-with-apps.html
