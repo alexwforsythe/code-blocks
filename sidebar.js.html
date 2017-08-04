@@ -46,11 +46,6 @@
      * user's preferences if previously set, and assign click handlers to each button.
      */
     $(function () {
-        // register jquery outerHTML plugin
-        jQuery.fn.outerHTML = function () {
-            return jQuery('<div />').append(this.eq(0).clone()).html();
-        };
-
         // populate language input options
         languages.forEach(function addLanguageOption(lang) {
             $(ids.theme).append(
@@ -136,8 +131,8 @@
 
     function replaceSpecialChars(html) {
         return html
-            .replace(/\u2018|\u2019|\u201A|\uFFFD/g, "'")
-            .replace(/\u201c|\u201d|\u201e/g, '"')
+            .replace(/[\u2018\u2019\u201A\uFFFD]/g, '\'')
+            .replace(/[\u201c\u201d\u201e]/g, '"')
             .replace(/\u02C6/g, '^')
             .replace(/\u2039/g, '<')
             .replace(/\u203A/g, '>')
@@ -150,7 +145,7 @@
             .replace(/\u00BC/g, '1/4')
             .replace(/\u00BD/g, '1/2')
             .replace(/\u00BE/g, '3/4')
-            .replace(/[\u02DC|\u00A0]/g, " ");
+            .replace(/[\u02DC|\u00A0]/g, ' ');
     }
 
     // button function to show code preview
@@ -188,7 +183,7 @@
     }
 
     function createHighlightedBlock(text, css, language, noBackground) {
-        const text = replaceSpecialChars(text);
+        text = replaceSpecialChars(text);
 
         var block = $(ids.preview).clone();
         block.removeClass();
@@ -199,7 +194,7 @@
         }
         hljs.highlightBlock(block[0]); // todo: why [0]?
 
-        var highlighted = block.outerHTML();
+        var highlighted = block.prop('outerHTML');
         if (css) {
             highlighted = juice.inlineContent(highlighted, css);
         }
@@ -231,7 +226,7 @@
                     const css = result.css;
 
                     const block = createHighlightedBlock(selection, css, language);
-                    const html = block.outerHTML();
+                    const html = block.prop('outerHTML');
 
                     google.script.run
                         .withFailureHandler(showErrorHighlightButtons)
@@ -251,7 +246,7 @@
         $(ids.error).remove();
 
         const noBackground = $(ids.noBackground).is(':checked');
-        const html = $(ids.preview).outerHTML();
+        const html = $(ids.preview).prop('outerHTML');
 
         google.script.run
             .withFailureHandler(showErrorPreviewButtons)
