@@ -1,3 +1,5 @@
+const title = 'Code Blocks';
+
 /**
  * @OnlyCurrentDoc
  *
@@ -26,11 +28,7 @@ function onOpen(e) {
 /**
  * Runs when the add-on is installed.
  *
- * @param {object} e The event parameter for a simple onInstall trigger. To
- *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
- *     running in, inspect e.authMode. (In practice, onInstall triggers always
- *     run in AuthMode.FULL, but onOpen triggers may be AuthMode.LIMITED or
- *     AuthMode.NONE.)
+ * @param {object} e The event parameter for a simple onInstall trigger.
  */
 function onInstall(e) {
     onOpen(e);
@@ -42,11 +40,12 @@ function onInstall(e) {
 function showSidebar() {
     var ui = HtmlService.createTemplateFromFile('sidebar').evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-        .setTitle(config.title);
+        .setTitle(title);
 
     DocumentApp.getUi().showSidebar(ui);
 }
 
+// noinspection JSUnusedGlobalSymbols
 /**
  * todo: doc
  * todo: find a way to document exposed functions vs lib functions
@@ -63,7 +62,8 @@ function getPreferencesAndThemes() {
 /**
  * Gets the stored user preferences, if they exist.
  *
- * @returns {{language: string, theme: string, noBackground: string}} The user's preferences, if they exist.
+ * @returns {{language: string, theme: string, noBackground: string}}
+ * The user's preferences, if they exist.
  */
 function getPreferences() {
     try {
@@ -81,113 +81,26 @@ function getPreferences() {
 }
 
 /**
- * todo: button function to get themes from cdnjs
+ * todo: doc
+ * button function to load themes into cache
  *
  * @returns {string[]}
  */
 function getThemes() {
-    // first, try to get urls from the script cache
-    var scriptCache = CacheService.getScriptCache();
-    var themeUrls = scriptCache.get(constants.cache.themeUrlsKey);
+    var cache = CacheService.getScriptCache();
+    var html = HtmlService.createHtmlOutputFromFile('styles.html');
+    var block = XmlService.parse(html);
+    var content = block.getAllContent();
 
-    if (themeUrls) {
-        themeUrls = JSON.parse(themeUrls);
-        // todo: necessary?
-        cacheDefaultThemeCSS(themeUrls);
-        return Object.keys(themeUrls);
-    }
+    return content.map(function cacheCss(c) {
+        var element = c.asElement();
+        var filename = element.getAttribute('id');
+        var themeName = filename.slice(0, '.css'.length);
+        var css = element.getText();
+        cache.put(themeName, css);
 
-    getThemesFromCdnjs(function onGetThemes(err, themeUrls) {
-        if (err) {
-            logError(constants.errors.getThemes, err);
-            throw constants.errors.getThemes;
-        }
-
-        // cache the theme urls
-        // data in the cache is stored as a string
-        scriptCache.put(
-            constants.cache.themeUrlsKey,
-            JSON.stringify(themeUrls),
-            config.cache.defaultTtl
-        );
-
-        // cache each url individually for faster lookup
-        scriptCache.putAll(themeUrls, config.cache.defaultTtl + 10);
-        cacheDefaultThemeCSS(themeUrls);
-
-        return Object.keys(themeUrls);
+        return themeName;
     });
-}
-
-function cacheDefaultThemeCSS(themeUrls) {
-    // cache default theme, because it contains the base css
-    var defaultUrl = themeUrls[constants.themes.default];
-    if (defaultUrl) {
-        getThemeStyle(defaultUrl);
-    }
-}
-
-function getThemesFromCdnjs(callback) {
-    try {
-        var resp = UrlFetchApp.fetch(config.hljs.urls.cdnjsLib);
-    } catch (err) {
-        logError(constants.errors.getThemes, err);
-        return getThemesFromGh(next);
-    }
-
-    var respJson = resp.getContentText();
-    var respData = JSON.parse(respJson);
-    var assets = respData['assets'];
-
-    // get the latest version in assets
-    var version = config.hljs.useLatest ?
-        respData.version :
-        config.hljs.defaultVersion;
-    var hasLatest = assets.some(function matches(asset) {
-        return asset.version === version;
-    });
-    var latest = hasLatest ? version : assets[0];
-
-    var cssPaths = latest.files.filter(function isCssPath(file) {
-        return file.indexOf('styles') === 0 &&
-            file.indexOf('.css', file.length - 4) !== -1;
-    });
-
-    var themeUrls = cssPaths.reduce(function toUrl(result, path) {
-        var theme = path.split('styles/').pop().split('.')[0];
-        if (theme) {
-            result[theme] = buildThemeUrl(theme, version);
-        }
-    }, {});
-
-    return callback(null, themeUrls);
-}
-
-function getThemesFromGh(callback) {
-    try {
-        var resp = UrlFetchApp.fetch(config.hljs.urls.ghThemes);
-    } catch (err) {
-        logError(constants.errors.getThemes, err);
-        callback(constants.errors.getThemes);
-    }
-
-    var respJson = resp.getContentText();
-    var respData = JSON.parse(respJson);
-
-    var cssEntries = respData.filter(function isCssEntry(entry) {
-        return entry.type === 'file' &&
-            entry.name &&
-            entry.name.indexOf('.css', file.length - 4) !== -1;
-    });
-
-    var themeUrls = cssEntries.reduce(function toUrl(result, entry) {
-        var theme = entry.name.split('.')[0];
-        if (theme) {
-            themeUrls[theme] = buildThemeUrl(theme);
-        }
-    }, {});
-
-    return callback(null, themeUrls);
 }
 
 /**
@@ -207,12 +120,12 @@ function getThemesFromGh(callback) {
 
 // noinspection JSUnusedGlobalSymbols
 /**
- * todo
+ * todo: doc
  *
  * @param language
  * @param theme
  * @param noBackground
- * @returns {{css: string}}
+ * @returns {{css: string, selection: string}}
  */
 function getSelectionAndThemeStyle(language, theme, noBackground) {
     // save user preferences
@@ -222,12 +135,10 @@ function getSelectionAndThemeStyle(language, theme, noBackground) {
     userProperties.setProperty(constants.props.noBackground, noBackground);
 
     // prepend default css for all themes
-    var defaultThemeUrl = getThemeUrl(constants.themes.default);
-    var css = getThemeStyle(defaultThemeUrl);
-
+    var scriptCache = CacheService.getScriptCache();
+    var css = scriptCache.get(constants.themes.default);
     if (theme !== constants.themes.default) {
-        var themeUrl = getThemeUrl(theme);
-        css += getThemeStyle(themeUrl);
+        css += scriptCache.get(theme);
     }
 
     var text = getSelectedText();
@@ -237,43 +148,6 @@ function getSelectionAndThemeStyle(language, theme, noBackground) {
         css: css,
         selection: selection
     };
-}
-
-function getThemeUrl(theme) {
-    var scriptCache = CacheService.getScriptCache();
-    var themeUrl = scriptCache.get(theme);
-
-    if (!themeUrl) {
-        // themeUrls might have expired, try fetching them again
-        getThemes();
-        themeUrl = scriptCache.get(theme);
-    }
-
-    if (!themeUrl) {
-        throw constants.errors.themeNotFound;
-    }
-
-    return themeUrl;
-}
-
-// gets and caches theme style
-function getThemeStyle(themeUrl) {
-    var scriptCache = CacheService.getScriptCache();
-    var css = scriptCache.get(themeUrl);
-
-    if (!css) {
-        var resp = UrlFetchApp.fetch(themeUrl);
-        css = resp.getContentText();
-
-        // try to cache the css
-        try {
-            scriptCache.put(themeUrl, css);
-        } catch (err) {
-            logError(constants.errors.cacheCss, err);
-        }
-    }
-
-    return css;
 }
 
 /**
@@ -288,7 +162,7 @@ function getThemeStyle(themeUrl) {
 
 // noinspection JSUnusedGlobalSymbols
 /**
- * todo
+ * todo: doc
  *
  * @param html
  * @param noBackground
@@ -312,17 +186,11 @@ function insertCode(html, noBackground) {
     }
 }
 
-function buildThemeUrl(theme, version) {
-    return version ?
-        config.hljs.urls.cdnjsStyles + version + '/styles/' + theme + '.min.css' :
-        config.hljs.defaultVersion;
-}
-
 // noinspection JSUnusedGlobalSymbols
 /**
  * Helper function that puts external JS / CSS into the HTML file.
  * @param {string} filename
- * @returns {string}
+ * @returns {string} file contents
  */
 function include(filename) {
     return HtmlService.createHtmlOutputFromFile(filename).getContent();

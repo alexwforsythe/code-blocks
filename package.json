@@ -5,13 +5,14 @@
   "devDependencies": {
     "browserify": "^14.4.0",
     "highlight.js": "^9.12.0",
+    "html-minifier": "^3.5.3",
     "jquery": "^3.2.1",
     "juice": "^4.1.0",
     "uglify-es": "^3.0.27",
     "uglifyify": "^4.0.3"
   },
   "scripts": {
-    "build": "browserify -t 'uglifyify' client/sidebar.js | uglifyjs > client/bundle.min.js",
-    "postbuild": "./post_build.sh"
+    "build": "browserify -t 'uglifyify' ./client/sidebar.js | uglifyjs > ./client/bundle.min.js",
+    "postbuild": "./postbuild.sh"
   }
 }

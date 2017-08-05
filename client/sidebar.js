@@ -17,7 +17,6 @@ const ids = {
     error: '#error'
 };
 
-const defaultTheme = 'default';
 const defaultBgc = '#f0f0f0';
 const languageAuto = 'Auto';
 const languages = hljs.listLanguages().sort();
@@ -27,9 +26,10 @@ const languages = hljs.listLanguages().sort();
  * user's preferences if previously set, and assign click handlers to each button.
  */
 $(function () {
+    const languageSelect = $(ids.language);
     // populate language input options
     languages.forEach(function addLanguageOption(lang) {
-        $(ids.theme).append(
+        languageSelect.append(
             '<option value="' + lang + '">' + lang + '</option>'
         );
     });
@@ -49,13 +49,6 @@ $(function () {
 
 function loadThemes(themes) {
     const themeSelect = $(ids.theme);
-
-    // todo: does this mean that we can remove css caching for default theme?
-    // remove 'default', because its CSS is already in HTML as a fallback
-    var i = themes.indexOf(defaultTheme);
-    if (i !== -1) {
-        themes.splice(i, 1);
-    }
 
     // populate theme input options
     themes.forEach(function addThemeOption(theme) {

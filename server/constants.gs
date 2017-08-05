@@ -1,13 +1,7 @@
 const constants = {
-    cache: {
-        themeUrlsKey: 'theme_urls'
-    },
     errors: {
-        cacheCss: 'Failed to cache CSS',
         insert: 'Can\'t insert here.',
         getUserPreferences: 'Couldn\'t get user preferences.',
-        getThemes: 'Couldn\'t get themes.',
-        themeNotFound: 'Couldn\'t get theme.',
         selectText: 'Please select some text.'
     },
     props: {
