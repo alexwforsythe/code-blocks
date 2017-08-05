@@ -1,4 +1,4 @@
-const RGB_PATTERN = /^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i;
+var RGB_PATTERN = /^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i;
 
 /**
  * todo
@@ -58,7 +58,7 @@ function padHex(hex) {
 }
 
 // todo: find a built-in way to get these
-const COLORS = {
+var COLORS = {
     "aliceblue": "#f0f8ff",
     "antiquewhite": "#faebd7",
     "aqua": "#00ffff",

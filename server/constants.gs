@@ -1,4 +1,4 @@
-const constants = {
+var constants = {
     errors: {
         insert: 'Can\'t insert here.',
         getUserPreferences: 'Couldn\'t get user preferences.',
@@ -10,7 +10,7 @@ const constants = {
         noBackground: 'no_background'
     },
     themes: {
-        default: 'default'
+        'default': 'default'
     },
     document: {
         /**

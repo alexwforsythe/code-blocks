@@ -1,4 +1,5 @@
-.idea
-node_modules
-.gas
+.gas/
+.gen/
+.idea/
+node_modules/
 client/bundle.min.js

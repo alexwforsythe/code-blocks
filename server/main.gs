@@ -1,4 +1,4 @@
-const title = 'Code Blocks';
+var title = 'Code Blocks';
 
 /**
  * @OnlyCurrentDoc
@@ -82,6 +82,8 @@ function getPreferences() {
 
 /**
  * todo: doc
+ * todo: to constants
+ *
  * button function to load themes into cache
  *
  * @returns {string[]}
@@ -89,14 +91,14 @@ function getPreferences() {
 function getThemes() {
     var cache = CacheService.getScriptCache();
     var html = HtmlService.createHtmlOutputFromFile('styles.html');
-    var block = XmlService.parse(html);
-    var content = block.getAllContent();
+    var xml = XmlService.parse(html.getContent());
+    var root = xml.getRootElement();
+    var styles = root.getChildren();
 
-    return content.map(function cacheCss(c) {
-        var element = c.asElement();
-        var filename = element.getAttribute('id');
-        var themeName = filename.slice(0, '.css'.length);
-        var css = element.getText();
+    return styles.map(function cacheCss(style) {
+        var filename = style.getAttribute('id').getValue();
+        var themeName = filename.slice(0, -'.css'.length);
+        var css = style.getText();
         cache.put(themeName, css);
 
         return themeName;
@@ -136,8 +138,9 @@ function getSelectionAndThemeStyle(language, theme, noBackground) {
 
     // prepend default css for all themes
     var scriptCache = CacheService.getScriptCache();
-    var css = scriptCache.get(constants.themes.default);
-    if (theme !== constants.themes.default) {
+    // todo: need function to retrieve themes; remember cache expires
+    var css = scriptCache.get(constants.themes['default']);
+    if (theme !== constants.themes['default']) {
         css += scriptCache.get(theme);
     }
 
