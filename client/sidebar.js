@@ -1,6 +1,6 @@
 var $ = require('jquery');
 var juice = require('juice/client');
-var hljs = require('highlight.js');
+var hljs = require('./register').getHljs();
 
 // element ids
 const ids = {
