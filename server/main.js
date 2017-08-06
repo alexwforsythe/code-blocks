@@ -99,10 +99,38 @@ function getThemes() {
         var filename = style.getAttribute('id').getValue();
         var themeName = filename.slice(0, -'.css'.length);
         var css = style.getText();
-        cache.put(themeName, css);
+
+        try {
+            cache.put(themeName, css, constants.defaultTtl);
+        } catch (e) {
+            logError('Failed to cache CSS', e);
+        }
 
         return themeName;
     });
+}
+
+/**
+ * Retrieves a theme's CSS, caching it if necessary.
+ *
+ * @param themeName
+ * @returns {string} the theme CSS
+ */
+function getTheme(themeName) {
+    var scriptCache = CacheService.getScriptCache();
+
+    var css = scriptCache.get(themeName);
+    if (css === null) {
+        // reload and cache the themes
+        getThemes();
+
+        css = scriptCache.get(themeName);
+        if (css === null) {
+            throw constants.errors.themeNotFound;
+        }
+    }
+
+    return css;
 }
 
 /**
@@ -136,12 +164,10 @@ function getSelectionAndThemeStyle(language, theme, noBackground) {
     userProperties.setProperty(constants.props.theme, theme);
     userProperties.setProperty(constants.props.noBackground, noBackground);
 
-    // prepend default css for all themes
-    var scriptCache = CacheService.getScriptCache();
-    // todo: need function to retrieve themes; remember cache expires
-    var css = scriptCache.get(constants.themes['default']);
+    // prepend default css to the theme
+    var css = getTheme(constants.themes['default']);
     if (theme !== constants.themes['default']) {
-        css += scriptCache.get(theme);
+        css += getTheme(theme);
     }
 
     var text = getSelectedText();

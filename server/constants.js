@@ -1,8 +1,10 @@
 var constants = {
+    defaultTtl: 3600, // in seconds
     errors: {
         insert: 'Can\'t insert here.',
         getUserPreferences: 'Couldn\'t get user preferences.',
-        selectText: 'Please select some text.'
+        selectText: 'Please select some text.',
+        themeNotFound: 'Couldn\'t get theme.'
     },
     props: {
         language: 'language',
