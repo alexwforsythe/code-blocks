@@ -190,6 +190,7 @@ function insertHTMLAsText(element, index, html, noBackground, cell) {
         var rootAttrs = addStyleAttrs({}, style);
         var cellAttrs = cell.getAttributes();
         var rootBgc = rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
+        rootBgc = colorToHex(rootBgc);
         cellAttrs[DocumentApp.Attribute.BACKGROUND_COLOR] = rootBgc;
         cell.setAttributes(cellAttrs);
 
@@ -263,7 +264,6 @@ function addStyleAttr(attrs, key, val, noBackground) {
             if (noBackground) {
                 return;
             }
-            break;
         case constants.document.htmlAttrs.color:
             val = colorToHex(val);
             break;
