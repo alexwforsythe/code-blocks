@@ -1,4 +1,5 @@
 var constants = {
+    title: 'Code Blocks',
     cache: {
         ttl: 3600, // in seconds
         themesCachedKey: 'themesCached'
