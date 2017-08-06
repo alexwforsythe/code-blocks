@@ -53,7 +53,7 @@ const languages = {
  * @returns {globalObject.hljs} an instance of the highlight.js library with
  * each configured language registered to it
  */
-function getHljs() {
+function register() {
     Object.keys(languages).forEach(function register(name) {
         hljs.registerLanguage(name, languages[name]);
     });
@@ -62,5 +62,5 @@ function getHljs() {
 }
 
 module.exports = {
-    getHljs: getHljs
+    register: register
 };
