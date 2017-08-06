@@ -10,9 +10,9 @@ function getSelectedText() {
         throw constants.errors.selectText;
     }
 
-    var result = [];
     var elements = selection.getSelectedElements();
-    // todo: use map?
+
+    var result = [];
     elements.forEach(function(e) {
         if (e.isPartial()) {
             var startIndex = e.getStartOffset();
@@ -41,11 +41,11 @@ function getSelectedText() {
 }
 
 /**
- * todo
+ * Replaces the current selection with the provided html.
  *
- * @param selection
- * @param html
- * @param noBackground
+ * @param {GoogleAppsScript.Document.Range} selection
+ * @param html todo
+ * @param {Boolean} noBackground
  */
 function replaceSelection(selection, html, noBackground) {
     var replaced = false;
@@ -111,7 +111,7 @@ function replaceSelection(selection, html, noBackground) {
  * todo
  *
  * @param html
- * @param noBackground
+ * @param {Boolean} noBackground
  */
 function insertAtCursor(html, noBackground) {
     var cursor = DocumentApp.getActiveDocument().getCursor();
@@ -189,12 +189,12 @@ function insertHTMLAsText(element, index, html, noBackground, cell) {
         var style = root.getAttribute('style');
         var rootAttrs = addStyleAttrs({}, style);
         var cellAttrs = cell.getAttributes();
-        cellAttrs[DocumentApp.Attribute.BACKGROUND_COLOR] =
-            rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
+        var rootBgc = rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
+        cellAttrs[DocumentApp.Attribute.BACKGROUND_COLOR] = rootBgc;
         cell.setAttributes(cellAttrs);
 
         // todo: doesn't always work
-        // cell.setBackgroundColor(rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR]);
+        // cell.setBackgroundColor(rootBgc);
     }
 
     insertNode(element, index, root, attrs, noBackground);
@@ -203,16 +203,15 @@ function insertHTMLAsText(element, index, html, noBackground, cell) {
 function insertNode(element, index, node, attrs, noBackground) {
     if (node.getType() === XmlService.ContentTypes.TEXT) {
         var str = node.getText();
-        // Logger.log('text: ' + str);
         var text = element.insertText(index, str);
         text.setAttributes(attrs);
         return;
     }
 
+    // reverse pre-order traversal
     if (node.getType() === XmlService.ContentTypes.ELEMENT) {
         var child = node.asElement();
         var style = child.getAttribute('style');
-        // Logger.log('style: ' + style);
 
         // pass new style attributes down the stack
         var childAttrs = addStyleAttrs(attrs, style, noBackground);
@@ -233,7 +232,6 @@ function addStyleAttrs(attrs, attr, noBackground) {
     attrs = copyAttrs(attrs);
     var style = attr.getValue();
     var styles = style.split(';');
-    // Logger.log('styles: ' + styles);
     styles.forEach(function addStyle(style) {
         var pieces = style.split(':');
         if (pieces.length === 2) {
@@ -253,41 +251,47 @@ function addStyleAttr(attrs, key, val, noBackground) {
     // handle special cases
     switch (key) {
         // font style
-        case 'font-weight':
-        case 'font-style':
-        case 'text-decoration':
-            attr = constants.document.attrs[val];
+        case constants.document.htmlAttrs.fontWeight:
+        case constants.document.htmlAttrs.fontStyle:
+        case constants.document.htmlAttrs.textDecoration:
+            attr = constants.document.docAttrs[val];
             if (attr) {
                 attrs[attr] = true;
             }
             return;
-        case 'background':
+        case constants.document.htmlAttrs.background:
             if (noBackground) {
                 return;
             }
             break;
-        case 'color':
+        case constants.document.htmlAttrs.color:
             val = colorToHex(val);
             break;
     }
 
     // everything else
-    var attr = constants.document.attrs[key];
+    var attr = constants.document.docAttrs[key];
     if (attr) {
         attrs[attr] = val;
     }
 }
 
-// util function to deep copy doc text attributes
+/**
+ * util function to deep copy doc text attributes
+ *
+ * @param attrs
+ */
 function copyAttrs(attrs) {
     // todo: do literal copy if possible for performance
     return JSON.parse(JSON.stringify(attrs));
 }
 
-// util function to remove an element
+/**
+ * util function to remove an element
+ *
+ * @param element the element to remove
+ */
 function removeElement(element) {
-    // Logger.log('removing element');
-
     if (element.getNextSibling()) {
         return element.removeFromParent();
     }
@@ -301,10 +305,13 @@ function removeElement(element) {
     clearText(element);
 }
 
-// util function to clear all text from an element
+/**
+ * util function to clear all text from an element
+ *
+ * @param element the element to be cleared of text
+ * @returns {GoogleAppsScript.Document.Text}
+ */
 function clearText(element) {
-    // Logger.log('clearing text');
-
     if (element.editAsText) {
         var text = element.editAsText();
         var textLen = text.getText().length;

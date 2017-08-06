@@ -86,28 +86,45 @@ function getPreferences() {
  *
  * button function to load themes into cache
  *
- * @returns {string[]}
+ * @returns {string[]} a list of all theme names
  */
 function getThemes() {
-    var cache = CacheService.getScriptCache();
+    var scriptCache = CacheService.getScriptCache();
     var html = HtmlService.createHtmlOutputFromFile('styles.html');
     var xml = XmlService.parse(html.getContent());
     var root = xml.getRootElement();
     var styles = root.getChildren();
 
-    return styles.map(function cacheCss(style) {
+    var themesAreCached = scriptCache.get(constants.cache.themesCachedKey);
+    if (themesAreCached === 'true') {
+        return styles.map(function getName(style) {
+            var filename = style.getAttribute('id').getValue();
+            return filename.slice(0, -'.css'.length);
+        });
+    }
+
+    var themes = styles.map(function cacheCss(style) {
         var filename = style.getAttribute('id').getValue();
         var themeName = filename.slice(0, -'.css'.length);
-        var css = style.getText();
 
-        try {
-            cache.put(themeName, css, constants.defaultTtl);
-        } catch (e) {
-            logError('Failed to cache CSS', e);
+        var css = scriptCache.get(themeName);
+        if (css === null) {
+            css = style.getText();
+            try {
+                scriptCache.put(themeName, css, constants.cache.ttl);
+            } catch (e) {
+                logError('Failed to cache CSS', e);
+            }
         }
 
         return themeName;
     });
+
+    scriptCache.put(
+        constants.cache.themesCachedKey, 'true',
+        constants.cache.ttl - 10);
+
+    return themes;
 }
 
 /**

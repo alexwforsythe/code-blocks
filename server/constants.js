@@ -1,5 +1,8 @@
 var constants = {
-    defaultTtl: 3600, // in seconds
+    cache: {
+        ttl: 3600, // in seconds
+        themesCachedKey: 'themesCached'
+    },
     errors: {
         insert: 'Can\'t insert here.',
         getUserPreferences: 'Couldn\'t get user preferences.',
@@ -18,13 +21,20 @@ var constants = {
         /**
          * A map of CSS attributes to document attributes
          */
-        attrs: {
+        docAttrs: {
             background: DocumentApp.Attribute.BACKGROUND_COLOR,
             bold: DocumentApp.Attribute.BOLD,
             color: DocumentApp.Attribute.FOREGROUND_COLOR,
             italic: DocumentApp.Attribute.ITALIC,
             'line-through': DocumentApp.Attribute.STRIKETHROUGH,
             underline: DocumentApp.Attribute.UNDERLINE
+        },
+        htmlAttrs: {
+            fontWeight: 'font-weight',
+            fontStyle: 'font-style',
+            textDecoration: 'text-decoration',
+            background: 'background',
+            color: 'color'
         },
         fonts: {
             consolas: 'Consolas'

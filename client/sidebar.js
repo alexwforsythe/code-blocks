@@ -66,10 +66,6 @@ function loadThemes(themes) {
  * @param themes
  */
 function loadPreferences(prefs, themes) {
-//        console.log(languages);
-//        console.log(themes);
-//        console.log(prefs);
-
     if (prefs.language) {
         const language = $(ids.language);
         const selectionIsValid = languages.some(function matchesPref(l) {
@@ -137,21 +133,20 @@ function showPreview() {
 
     google.script.run
         .withFailureHandler(showErrorPreviewButtons)
-        .withSuccessHandler(
-            function (result, element) {
-                const block = createHighlightedBlock(
-                    result.selection,
-                    result.css,
-                    language,
-                    noBackground
-                );
+        .withSuccessHandler(function onSuccess(result, element) {
+            const block = createHighlightedBlock(
+                result.selection,
+                result.css,
+                language,
+                noBackground
+            );
 
-                // render preview
-                $(ids.preview).replaceWith(block);
-                $(ids.paste).prop('disabled', false);
+            // render preview
+            $(ids.preview).replaceWith(block);
+            $(ids.paste).prop('disabled', false);
 
-                element.disabled = false;
-            })
+            element.disabled = false;
+        })
         .withUserObject(this)
         .getSelectionAndThemeStyle(language, theme, noBackground);
 }
@@ -194,20 +189,19 @@ function highlightSelection() {
 
     google.script.run
         .withFailureHandler(showErrorHighlightButtons)
-        .withSuccessHandler(
-            function (result, element) {
-                const selection = result.selection;
-                const css = result.css;
+        .withSuccessHandler(function onSuccess(result, element) {
+            const selection = result.selection;
+            const css = result.css;
 
-                const block = createHighlightedBlock(selection, css, language);
-                const html = block.prop('outerHTML');
+            const block = createHighlightedBlock(selection, css, language);
+            const html = block.prop('outerHTML');
 
-                google.script.run
-                    .withFailureHandler(showErrorHighlightButtons)
-                    .withSuccessHandler(focusEditor)
-                    .withUserObject(element)
-                    .insertCode(html, noBackground);
-            })
+            google.script.run
+                .withFailureHandler(showErrorHighlightButtons)
+                .withSuccessHandler(focusEditor)
+                .withUserObject(element)
+                .insertCode(html, noBackground);
+        })
         .withUserObject(this)
         .getSelectionAndThemeStyle(language, theme, noBackground);
 }
@@ -238,7 +232,6 @@ function focusEditor(result, element) {
 //noinspection JSUnusedLocalSymbols
 function showErrorThemes(msg, element) {
     showError(msg, $(ids.themes));
-//        element.disabled = false;
 
     // enable other forms even if getting themes fails
     [
