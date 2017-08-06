@@ -20,5 +20,6 @@
     "link": "cd ./.gen && gas link $(cat ../.gas/ID)",
     "prepush": "npm run build && npm run link",
     "push": "cd ./.gen && gas push"
-  }
+  },
+  "version": "1.2.0"
 }
