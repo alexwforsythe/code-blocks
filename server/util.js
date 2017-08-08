@@ -34,36 +34,28 @@ function getThemes() {
     var root = xml.getRootElement();
     var styles = root.getChildren();
 
-    var themesAreCached = scriptCache.get(constants.cache.themesCachedKey);
-    if (themesAreCached === 'true') {
+    var defaultCss = scriptCache.get(constants.themes['default']);
+    if (defaultCss && defaultCss.slice(0, 4) !== 'http') {
+        // themes are still cached
         return styles.map(function getName(style) {
             var filename = style.getAttribute('id').getValue();
             return filename.slice(0, -'.css'.length);
         });
     }
 
-    var themes = styles.map(function cacheCss(style) {
+    return styles.map(function cacheCss(style) {
         var filename = style.getAttribute('id').getValue();
         var themeName = filename.slice(0, -'.css'.length);
+        var css = style.getText();
 
-        var css = scriptCache.get(themeName);
-        if (css === null) {
-            css = style.getText();
-            try {
-                scriptCache.put(themeName, css, constants.cache.ttl);
-            } catch (e) {
-                logError('Failed to cache CSS', e);
-            }
+        try {
+            scriptCache.put(themeName, css, constants.cache.ttl);
+        } catch (e) {
+            logError('Failed to cache CSS', e);
         }
 
         return themeName;
     });
-
-    scriptCache.put(
-        constants.cache.themesCachedKey, 'true',
-        constants.cache.ttl - 10);
-
-    return themes;
 }
 
 /**

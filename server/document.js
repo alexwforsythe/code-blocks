@@ -190,7 +190,7 @@ function insertHTMLAsText(element, index, html, noBackground, cell) {
         var rootAttrs = addStyleAttrs({}, style);
         var cellAttrs = cell.getAttributes();
         var rootBgc = rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
-        rootBgc = colorToHex(rootBgc);
+        rootBgc = rootBgc && colorToHex(rootBgc);
         cellAttrs[DocumentApp.Attribute.BACKGROUND_COLOR] = rootBgc;
         cell.setAttributes(cellAttrs);
 
@@ -235,7 +235,7 @@ function addStyleAttrs(attrs, attr, noBackground) {
     var styles = style.split(';');
     styles.forEach(function addStyle(style) {
         var pieces = style.split(':');
-        if (pieces.length === 2) {
+        if (pieces.length === 2 && pieces[1]) {
             var key = pieces[0];
             var val = pieces[1];
             addStyleAttr(attrs, key, val, noBackground);
@@ -265,7 +265,7 @@ function addStyleAttr(attrs, key, val, noBackground) {
                 return;
             }
         case constants.document.htmlAttrs.color:
-            val = colorToHex(val);
+            val = val && colorToHex(val);
             break;
     }
 
