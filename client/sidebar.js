@@ -2,24 +2,22 @@ var $ = require('jquery');
 var juice = require('juice/client');
 var hljs = require('./languages').register();
 
+const defaultBgc = '#f0f0f0';
+const languageAuto = 'Auto';
+const languages = hljs.listLanguages().sort();
+
 // element ids
 const ids = {
     language: '#language',
     theme: '#theme',
     themes: '#themes',
     noBackground: '#no-background',
-    previewButtons: '#preview-buttons',
-    showPreview: '#show-preview',
     preview: '#preview',
-    paste: '#insert-preview',
-    highlightButtons: '#insert-buttons',
+    highlightButtons: '#highlight-buttons',
     highlight: '#highlight-selection',
+    showPreview: '#show-preview',
     error: '#error'
 };
-
-const defaultBgc = '#f0f0f0';
-const languageAuto = 'Auto';
-const languages = hljs.listLanguages().sort();
 
 /**
  * On document load, try to load languages and themes, try to load the
@@ -36,15 +34,15 @@ $(function () {
 
     google.script.run
         .withFailureHandler(showErrorThemes)
-        .withSuccessHandler(function (result, element) {
+        .withSuccessHandler(function onSuccess(result, element) {
             loadThemes(result.themes);
             loadPreferences(result.prefs, result.themes);
+            enableUi();
         })
         .getPreferencesAndThemes();
 
     $(ids.highlight).click(highlightSelection);
-    $(ids.showPreview).click(showPreview);
-    $(ids.paste).click(insertPreview);
+    $(ids.showPreview).click(previewSelection);
 });
 
 function loadThemes(themes) {
@@ -75,6 +73,7 @@ function loadPreferences(prefs, themes) {
             language.val(prefs.language)
         }
     }
+
     if (prefs.theme) {
         const theme = $(ids.theme);
         const selectionIsValid = themes.some(function matchesPref(t) {
@@ -84,19 +83,10 @@ function loadPreferences(prefs, themes) {
             theme.val(prefs.theme);
         }
     }
+
     if (prefs.noBackground === 'true') {
         $(ids.noBackground).prop('checked', true);
     }
-
-    // enable forms
-    [
-        ids.language,
-        ids.theme,
-        ids.highlight,
-        ids.showPreview
-    ].forEach(function enable(id) {
-        $(id).prop('disabled', false);
-    });
 }
 
 function replaceSpecialChars(html) {
@@ -123,7 +113,7 @@ function replaceSpecialChars(html) {
  * Runs a server-side function to translate the user-selected text and update
  * the sidebar UI with the resulting translation.
  */
-function showPreview() {
+function previewSelection() {
     this.disabled = true;
     $(ids.error).remove();
 
@@ -132,8 +122,8 @@ function showPreview() {
     const noBackground = $(ids.noBackground).is(':checked');
 
     google.script.run
-        .withFailureHandler(showErrorPreviewButtons)
-        .withSuccessHandler(function onSuccess(result, element) {
+        .withFailureHandler(showErrorButtons)
+        .withSuccessHandler(function renderPreview(result, element) {
             const block = createHighlightedBlock(
                 result.selection,
                 result.css,
@@ -143,7 +133,6 @@ function showPreview() {
 
             // render preview
             $(ids.preview).replaceWith(block);
-            $(ids.paste).prop('disabled', false);
 
             element.disabled = false;
         })
@@ -188,8 +177,8 @@ function highlightSelection() {
     const noBackground = $(ids.noBackground).is(':checked');
 
     google.script.run
-        .withFailureHandler(showErrorHighlightButtons)
-        .withSuccessHandler(function onSuccess(result, element) {
+        .withFailureHandler(showErrorButtons)
+        .withSuccessHandler(function insertBlock(result, element) {
             const selection = result.selection;
             const css = result.css;
 
@@ -197,7 +186,7 @@ function highlightSelection() {
             const html = block.prop('outerHTML');
 
             google.script.run
-                .withFailureHandler(showErrorHighlightButtons)
+                .withFailureHandler(showErrorButtons)
                 .withSuccessHandler(focusEditor)
                 .withUserObject(element)
                 .insertCode(html, noBackground);
@@ -206,9 +195,7 @@ function highlightSelection() {
         .getSelectionAndThemeStyle(language, theme, noBackground);
 }
 
-/**
- * todo: button function to insert preview
- */
+/*
 function insertPreview() {
     this.disabled = true;
     $(ids.error).remove();
@@ -217,10 +204,22 @@ function insertPreview() {
     const html = $(ids.preview).prop('outerHTML');
 
     google.script.run
-        .withFailureHandler(showErrorPreviewButtons)
+        .withFailureHandler(showErrorButtons)
         .withSuccessHandler(focusEditor)
         .withUserObject(this)
         .insertCode(html, noBackground);
+}
+*/
+
+function enableUi() {
+    [
+        ids.language,
+        ids.theme,
+        ids.highlight,
+        ids.showPreview
+    ].forEach(function enable(id) {
+        $(id).prop('disabled', false);
+    });
 }
 
 //noinspection JSUnusedLocalSymbols
@@ -234,22 +233,10 @@ function showErrorThemes(msg, element) {
     showError(msg, $(ids.themes));
 
     // enable other forms even if getting themes fails
-    [
-        ids.language,
-        ids.theme,
-        ids.highlight,
-        ids.showPreview
-    ].forEach(function enable(id) {
-        $(id).prop('disabled', false);
-    });
+    enableUi();
 }
 
-function showErrorPreviewButtons(msg, element) {
-    showError(msg, $(ids.previewButtons));
-    element.disabled = false;
-}
-
-function showErrorHighlightButtons(msg, element) {
+function showErrorButtons(msg, element) {
     showError(msg, $(ids.highlightButtons));
     element.disabled = false;
 }
