@@ -6,7 +6,6 @@ const defaultBgc = '#f0f0f0';
 const languageAuto = 'Auto';
 const languages = hljs.listLanguages().sort();
 
-// element ids
 const ids = {
     language: '#language',
     theme: '#theme',
@@ -20,50 +19,119 @@ const ids = {
 };
 
 /**
- * On document load, try to load languages and themes, try to load the
- * user's preferences if previously set, and assign click handlers to each button.
+ * On document load, try to load languages and themes, try to load the user's
+ * preferences if previously set, and assign click handlers to each button.
  */
 $(function () {
-    const languageSelect = $(ids.language);
-    // populate language input options
-    languages.forEach(function addLanguageOption(lang) {
-        languageSelect.append(
-            '<option value="' + lang + '">' + lang + '</option>'
-        );
-    });
+    populateLanguages();
 
     google.script.run
         .withFailureHandler(showErrorThemes)
         .withSuccessHandler(function onSuccess(result, element) {
-            loadThemes(result.themes);
-            loadPreferences(result.prefs, result.themes);
-            enableUi();
+            populateThemes(result.themes);
+            populateUserPrefs(result.prefs, result.themes);
         })
-        .getPreferencesAndThemes();
+        .getThemesAndUserPrefs();
 
-    $(ids.highlight).click(highlightSelection);
-    $(ids.showPreview).click(previewSelection);
+    $(ids.highlight).click(highlight);
+    $(ids.showPreview).click(preview);
+
+    enableUiElements();
 });
 
-function loadThemes(themes) {
-    const themeSelect = $(ids.theme);
+/**
+ * Runs a server-side function to highlight the user-selected text and update
+ * the sidebar UI with the resulting block.
+ */
+function preview() {
+    this.disabled = true;
+    $(ids.error).remove();
 
-    // populate theme input options
-    themes.forEach(function addThemeOption(theme) {
-        themeSelect.append(
-            '<option value="' + theme + '">' + theme + '</option>'
-        );
-    });
+    const language = $(ids.language + ' option:selected').text();
+    const theme = $(ids.theme + ' option:selected').text();
+    const noBackground = $(ids.noBackground).is(':checked');
+
+    google.script.run
+        .withFailureHandler(showErrorButtons)
+        .withSuccessHandler(function renderPreview(result, element) {
+            const block = getHighlightedBlock(
+                result.selection,
+                result.css,
+                language,
+                noBackground
+            );
+
+            // render preview
+            $(ids.preview).replaceWith(block);
+            element.disabled = false;
+        })
+        .withUserObject(this)
+        .getSelectionAndThemeCss(language, theme, noBackground);
 }
 
 /**
- * Callback function that populates inputs elements with user preferences
- * from the server.
- *
- * @param {Object} prefs The saved preferences.
- * @param themes
+ * Runs a server-side function to highlight the user-selected text and replaces
+ * that text in the active document with the resulting block.
  */
-function loadPreferences(prefs, themes) {
+function highlight() {
+    this.disabled = true;
+    $(ids.error).remove();
+
+    const language = $(ids.language + ' option:selected').text();
+    const theme = $(ids.theme + ' option:selected').text();
+    const noBackground = $(ids.noBackground).is(':checked');
+
+    google.script.run
+        .withFailureHandler(showErrorButtons)
+        .withSuccessHandler(function insertBlock(result, element) {
+            const block = getHighlightedBlock(
+                result.selection,
+                result.css,
+                language, noBackground
+            );
+            const html = block.prop('outerHTML');
+
+            google.script.run
+                .withFailureHandler(showErrorButtons)
+                .withSuccessHandler(focusEditor)
+                .withUserObject(element)
+                .insertBlock(html, noBackground);
+        })
+        .withUserObject(this)
+        .getSelectionAndThemeCss(language, theme, noBackground);
+}
+
+/*
+ * Utilities
+ */
+
+/**
+ * Populate the language input options.
+ */
+function populateLanguages() {
+    const languageSelect = $(ids.language);
+    languageSelect.append(languages.map(function toOption(language) {
+        return '<option value="' + language + '">' + language + '</option>'
+    }));
+}
+
+/**
+ * Populates the theme input options.
+ */
+function populateThemes(themes) {
+    const themeSelect = $(ids.theme);
+    themeSelect.append(themes.map(function toOption(theme) {
+        return '<option value="' + theme + '">' + theme + '</option>';
+    }));
+}
+
+/**
+ * Populates the inputs elements with user preferences from the server.
+ *
+ * @param {object} prefs the saved preferences
+ * @param {Array.<string>} themes the list of themes
+ */
+function populateUserPrefs(prefs, themes) {
     if (prefs.language) {
         const language = $(ids.language);
         const selectionIsValid = languages.some(function matchesPref(l) {
@@ -89,58 +157,14 @@ function loadPreferences(prefs, themes) {
     }
 }
 
-function replaceSpecialChars(html) {
-    return html
-        .replace(/[\u2018\u2019\u201A\uFFFD]/g, '\'')
-        .replace(/[\u201c\u201d\u201e]/g, '"')
-        .replace(/\u02C6/g, '^')
-        .replace(/\u2039/g, '<')
-        .replace(/\u203A/g, '>')
-        .replace(/\u2013/g, '-')
-        .replace(/\u2014/g, '--')
-        .replace(/\u2026/g, '...')
-        .replace(/\u00A9/g, '(c)')
-        .replace(/\u00AE/g, '(r)')
-        .replace(/\u2122/g, 'TM')
-        .replace(/\u00BC/g, '1/4')
-        .replace(/\u00BD/g, '1/2')
-        .replace(/\u00BE/g, '3/4')
-        .replace(/[\u02DC|\u00A0]/g, ' ');
-}
-
-// button function to show code preview
 /**
- * Runs a server-side function to translate the user-selected text and update
- * the sidebar UI with the resulting translation.
+ * @param {string} text the text to highlight
+ * @param {string} css the theme style as CSS
+ * @param {string} language the language to use, defaults to 'auto'
+ * @param {boolean} noBackground whether to use the default background color
+ * @returns {string} the highlighted block as HTML with inline CSS
  */
-function previewSelection() {
-    this.disabled = true;
-    $(ids.error).remove();
-
-    const language = $(ids.language + ' option:selected').text();
-    const theme = $(ids.theme + ' option:selected').text();
-    const noBackground = $(ids.noBackground).is(':checked');
-
-    google.script.run
-        .withFailureHandler(showErrorButtons)
-        .withSuccessHandler(function renderPreview(result, element) {
-            const block = createHighlightedBlock(
-                result.selection,
-                result.css,
-                language,
-                noBackground
-            );
-
-            // render preview
-            $(ids.preview).replaceWith(block);
-
-            element.disabled = false;
-        })
-        .withUserObject(this)
-        .getSelectionAndThemeStyle(language, theme, noBackground);
-}
-
-function createHighlightedBlock(text, css, language, noBackground) {
+function getHighlightedBlock(text, css, language, noBackground) {
     text = replaceSpecialChars(text);
 
     var block = $(ids.preview).clone();
@@ -165,53 +189,7 @@ function createHighlightedBlock(text, css, language, noBackground) {
     return block;
 }
 
-/**
- * todo: button function to highlight selection
- */
-function highlightSelection() {
-    this.disabled = true;
-    $(ids.error).remove();
-
-    const language = $(ids.language + ' option:selected').text();
-    const theme = $(ids.theme + ' option:selected').text();
-    const noBackground = $(ids.noBackground).is(':checked');
-
-    google.script.run
-        .withFailureHandler(showErrorButtons)
-        .withSuccessHandler(function insertBlock(result, element) {
-            const selection = result.selection;
-            const css = result.css;
-
-            const block = createHighlightedBlock(selection, css, language);
-            const html = block.prop('outerHTML');
-
-            google.script.run
-                .withFailureHandler(showErrorButtons)
-                .withSuccessHandler(focusEditor)
-                .withUserObject(element)
-                .insertCode(html, noBackground);
-        })
-        .withUserObject(this)
-        .getSelectionAndThemeStyle(language, theme, noBackground);
-}
-
-/*
-function insertPreview() {
-    this.disabled = true;
-    $(ids.error).remove();
-
-    const noBackground = $(ids.noBackground).is(':checked');
-    const html = $(ids.preview).prop('outerHTML');
-
-    google.script.run
-        .withFailureHandler(showErrorButtons)
-        .withSuccessHandler(focusEditor)
-        .withUserObject(this)
-        .insertCode(html, noBackground);
-}
-*/
-
-function enableUi() {
+function enableUiElements() {
     [
         ids.language,
         ids.theme,
@@ -233,7 +211,7 @@ function showErrorThemes(msg, element) {
     showError(msg, $(ids.themes));
 
     // enable other forms even if getting themes fails
-    enableUi();
+    enableUiElements();
 }
 
 function showErrorButtons(msg, element) {
@@ -244,11 +222,29 @@ function showErrorButtons(msg, element) {
 /**
  * Inserts a div that contains an error message after a given element.
  *
- * @param msg The error message to display.
- * @param element The element after which to display the error.
+ * @param {string} msg the error message
+ * @param {string} elementId the element to display the error under
  */
-
-function showError(msg, element) {
+function showError(msg, elementId) {
     const div = $('<div id="error" class="error">' + msg + '</div>');
-    $(element).after(div);
+    $(elementId).after(div);
+}
+
+function replaceSpecialChars(html) {
+    return html
+        .replace(/[\u2018\u2019\u201A\uFFFD]/g, '\'')
+        .replace(/[\u201c\u201d\u201e]/g, '"')
+        .replace(/\u02C6/g, '^')
+        .replace(/\u2039/g, '<')
+        .replace(/\u203A/g, '>')
+        .replace(/\u2013/g, '-')
+        .replace(/\u2014/g, '--')
+        .replace(/\u2026/g, '...')
+        .replace(/\u00A9/g, '(c)')
+        .replace(/\u00AE/g, '(r)')
+        .replace(/\u2122/g, 'TM')
+        .replace(/\u00BC/g, '1/4')
+        .replace(/\u00BD/g, '1/2')
+        .replace(/\u00BE/g, '3/4')
+        .replace(/[\u02DC|\u00A0]/g, ' ');
 }

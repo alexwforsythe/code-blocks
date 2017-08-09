@@ -1,10 +1,8 @@
 /**
- * Gets the stored user preferences, if they exist.
- *
  * @returns {{language: string, theme: string, noBackground: string}}
  * The user's preferences, if they exist.
  */
-function getPreferences() {
+function getUserPrefs() {
     try {
         var userProperties = PropertiesService.getUserProperties();
     } catch (err) {
@@ -23,9 +21,7 @@ function getPreferences() {
  * todo: doc
  * todo: to constants
  *
- * button function to load themes into cache
- *
- * @returns {string[]} a list of all theme names
+ * @returns {Array.<string>} a list of all theme names
  */
 function getThemes() {
     var scriptCache = CacheService.getScriptCache();
@@ -35,6 +31,7 @@ function getThemes() {
     var styles = root.getChildren();
 
     var defaultCss = scriptCache.get(constants.themes['default']);
+    // todo: remove http check once cache is flushed after next deployment
     if (defaultCss && defaultCss.slice(0, 4) !== 'http') {
         // themes are still cached
         return styles.map(function getName(style) {
@@ -61,10 +58,10 @@ function getThemes() {
 /**
  * Retrieves a theme's CSS, caching it if necessary.
  *
- * @param themeName
+ * @param {string} themeName
  * @returns {string} the theme CSS
  */
-function getTheme(themeName) {
+function getThemeCss(themeName) {
     var scriptCache = CacheService.getScriptCache();
 
     var css = scriptCache.get(themeName);

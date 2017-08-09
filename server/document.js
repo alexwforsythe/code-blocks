@@ -2,7 +2,7 @@
  * Gets the text the user has selected. If there is no selection,
  * this function displays an error message.
  *
- * @return {Array.<string>} The selected text.
+ * x@return {Array.<string>} the selected text
  */
 function getSelectedText() {
     var selection = DocumentApp.getActiveDocument().getSelection();
@@ -44,8 +44,8 @@ function getSelectedText() {
  * Replaces the current selection with the provided html.
  *
  * @param {GoogleAppsScript.Document.Range} selection
- * @param html todo
- * @param {Boolean} noBackground
+ * @param {string} html todo
+ * @param {boolean} noBackground
  */
 function replaceSelection(selection, html, noBackground) {
     var replaced = false;
@@ -225,7 +225,6 @@ function insertNode(element, index, node, attrs, noBackground) {
 }
 
 function addStyleAttrs(attrs, attr, noBackground) {
-    // todo: really null?
     if (attr === null) {
         return attrs;
     }
@@ -276,21 +275,11 @@ function addStyleAttr(attrs, key, val, noBackground) {
     }
 }
 
-/**
- * util function to deep copy doc text attributes
- *
- * @param attrs
- */
 function copyAttrs(attrs) {
     // todo: do literal copy if possible for performance
     return JSON.parse(JSON.stringify(attrs));
 }
 
-/**
- * util function to remove an element
- *
- * @param element the element to remove
- */
 function removeElement(element) {
     if (element.getNextSibling()) {
         return element.removeFromParent();
@@ -306,9 +295,9 @@ function removeElement(element) {
 }
 
 /**
- * util function to clear all text from an element
+ * Clears all text from an element.
  *
- * @param element the element to be cleared of text
+ * @param {GoogleAppsScript.Document.Element} element
  * @returns {GoogleAppsScript.Document.Text}
  */
 function clearText(element) {

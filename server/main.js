@@ -45,43 +45,34 @@ function showSidebar() {
 
 // noinspection JSUnusedGlobalSymbols
 /**
- * todo: doc
- * todo: find a way to document exposed functions vs lib functions
  *
- * @returns {{themes: string[], prefs: {language: string, theme: string, noBackground: string}}}
+ * @returns {{
+ *   themes: string[],
+ *   prefs: {language: string, theme: string, noBackground: string}
+ * }}
  */
-function getPreferencesAndThemes() {
+function getThemesAndUserPrefs() {
     return {
         themes: getThemes(),
-        prefs: getPreferences()
+        prefs: getUserPrefs()
     };
 }
 
+// noinspection JSUnusedGlobalSymbols
 /**
+ * todo:
  * Gets the user-selected text and translates it from the origin language to the
  * destination language. The languages are notated by their two-letter short
  * form. For example, English is 'en', and Spanish is 'es'. The origin language
  * may be specified as an empty string to indicate that Google Translate should
  * auto-detect the language.
  *
- * @param {string} origin The two-letter short form for the origin language.
- * @param {string} dest The two-letter short form for the destination language.
- * @param {boolean} savePrefs Whether to save the origin and destination
- *     language preferences.
- * @return {Object} Object containing the original text and the result of the
- *     translation.
- */
-
-// noinspection JSUnusedGlobalSymbols
-/**
- * todo: doc
- *
- * @param language
- * @param theme
- * @param noBackground
+ * @param {string} language
+ * @param {string} theme
+ * @param {boolean} noBackground
  * @returns {{css: string, selection: string}}
  */
-function getSelectionAndThemeStyle(language, theme, noBackground) {
+function getSelectionAndThemeCss(language, theme, noBackground) {
     // save user preferences
     var userProperties = PropertiesService.getUserProperties();
     userProperties.setProperty(constants.props.language, language);
@@ -89,9 +80,9 @@ function getSelectionAndThemeStyle(language, theme, noBackground) {
     userProperties.setProperty(constants.props.noBackground, noBackground);
 
     // prepend default css to the theme
-    var css = getTheme(constants.themes['default']);
+    var css = getThemeCss(constants.themes['default']);
     if (theme !== constants.themes['default']) {
-        css += getTheme(theme);
+        css += getThemeCss(theme);
     }
 
     var text = getSelectedText();
@@ -103,36 +94,28 @@ function getSelectionAndThemeStyle(language, theme, noBackground) {
     };
 }
 
-/**
- * Replaces the text of the current selection with the provided text, or
- * inserts text at the current cursor location. (There will always be either
- * a selection or a cursor.) If multiple elements are selected, only inserts the
- * translated text in the first element that can contain text and removes the
- * other elements.
- *
- * @param {string} html The HTML with which to replace the current selection.
- */
-
 // noinspection JSUnusedGlobalSymbols
 /**
- * todo: doc
  *
- * @param html
- * @param noBackground
- * @returns {undefined}
+ * Replaces the text of the current selection with the provided block, or
+ * inserts the block at the current cursor location. (There will always be
+ * either a selection or a cursor.) If multiple elements are selected, only
+ * inserts the block in the first element that can contain text and removes the
+ * other elements.
+ *
+ * @param {string} html the HTML to replace the current selection with
+ * @param {boolean} noBackground
  */
-function insertCode(html, noBackground) {
+function insertBlock(html, noBackground) {
     try {
         // save user preferences
         var userProps = PropertiesService.getUserProperties();
         userProps.setProperty(constants.props.noBackground, noBackground);
 
         var selection = DocumentApp.getActiveDocument().getSelection();
-        if (selection) {
-            replaceSelection(selection, html, noBackground);
-        } else {
+        selection ?
+            replaceSelection(selection, html, noBackground) :
             insertAtCursor(html, noBackground);
-        }
     } catch (err) {
         logError(constants.errors.insert, err);
         throw constants.errors.insert;
@@ -142,6 +125,7 @@ function insertCode(html, noBackground) {
 // noinspection JSUnusedGlobalSymbols
 /**
  * Helper function that puts external JS / CSS into the HTML file.
+ *
  * @param {string} filename
  * @returns {string} file contents
  */
