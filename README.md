@@ -14,8 +14,6 @@ Otherwise, please refer to their page on requesting new languages, found
 
 ## Contributing
 
-If you would like to contribute to Code Blocks, PRs are welcome.
-
 ### Setup
 
 ```
@@ -38,7 +36,7 @@ Settings:
 ### Building
 
 ```
-$ npm run build
+$ npm run dist
 ```
 
 ### Pushing Changes
@@ -46,10 +44,28 @@ $ npm run build
 **NOTE:** The following command only works for the project maintainer,
 because it requires the user to be authenticated via Google Drive.
 
+Just GAS files:
+```
+$ npm run push:gas
+```
+
+Just `sidebar.js`:
+```
+$ npm run push:js
+```
+
+Just HTML & CSS:
+```
+$ npm run push:static
+```
+
+Everything:
 ```
 $ npm run push
 ```
 
 ## Resources
 
+* https://developers.google.com/apps-script/guides/support/best-practices
 * https://gsuite-developers.googleblog.com/2015/12/advanced-development-process-with-apps.html
+* http://googleappsscript.blogspot.com/2010/06/optimizing-spreadsheet-operations.html

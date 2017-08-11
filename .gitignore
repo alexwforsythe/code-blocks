@@ -1,5 +1,5 @@
 .gas/
-.gen/
 .idea/
 node_modules/
+dist/
 client/bundle.min.js
