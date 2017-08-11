@@ -15,7 +15,7 @@ var constants = {
         noBackground: 'no_background'
     },
     themes: {
-        'default': 'default'
+        base: 'default'
     },
     document: {
         /**

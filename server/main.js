@@ -45,27 +45,24 @@ function showSidebar() {
 
 // noinspection JSUnusedGlobalSymbols
 /**
- *
  * @returns {{
- *   themes: string[],
+ *   themes: Array.<string>,
  *   prefs: {language: string, theme: string, noBackground: string}
  * }}
  */
 function getThemesAndUserPrefs() {
+    var scriptCache = CacheService.getScriptCache();
+
     return {
-        themes: getThemes(),
+        themes: getThemesFromCache(scriptCache),
         prefs: getUserPrefs()
     };
 }
 
 // noinspection JSUnusedGlobalSymbols
 /**
- * todo:
- * Gets the user-selected text and translates it from the origin language to the
- * destination language. The languages are notated by their two-letter short
- * form. For example, English is 'en', and Spanish is 'es'. The origin language
- * may be specified as an empty string to indicate that Google Translate should
- * auto-detect the language.
+ * Saves the user's preferences and gets the user-selected text and CSS for
+ * the selected theme.
  *
  * @param {string} language
  * @param {string} theme
@@ -74,17 +71,13 @@ function getThemesAndUserPrefs() {
  */
 function getSelectionAndThemeCss(language, theme, noBackground) {
     // save user preferences
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty(constants.props.language, language);
-    userProperties.setProperty(constants.props.theme, theme);
-    userProperties.setProperty(constants.props.noBackground, noBackground);
+    var userProperties = {};
+    userProperties[constants.props.language] = language;
+    userProperties[constants.props.theme] = theme;
+    userProperties[constants.props.noBackground] = noBackground;
+    PropertiesService.getUserProperties().setProperties(userProperties);
 
-    // prepend default css to the theme
-    var css = getThemeCss(constants.themes['default']);
-    if (theme !== constants.themes['default']) {
-        css += getThemeCss(theme);
-    }
-
+    var css = getThemeCss(theme);
     var text = getSelectedText();
     var selection = text.join('\n');
 
@@ -107,15 +100,13 @@ function getSelectionAndThemeCss(language, theme, noBackground) {
  * @param {boolean} noBackground
  */
 function insertBlock(html, noBackground) {
-    try {
-        // save user preferences
-        var userProps = PropertiesService.getUserProperties();
-        userProps.setProperty(constants.props.noBackground, noBackground);
+    var selection = DocumentApp.getActiveDocument().getSelection();
+    if (!selection) {
+        throw constants.errors.selectText;
+    }
 
-        var selection = DocumentApp.getActiveDocument().getSelection();
-        selection ?
-            replaceSelection(selection, html, noBackground) :
-            insertAtCursor(html, noBackground);
+    try {
+        replaceSelection(selection, html, noBackground);
     } catch (err) {
         logError(constants.errors.insert, err);
         throw constants.errors.insert;

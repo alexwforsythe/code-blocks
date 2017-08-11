@@ -1,48 +1,35 @@
 /**
- * @returns {{language: string, theme: string, noBackground: string}}
- * The user's preferences, if they exist.
+ * @returns {object} The user's preferences, if they exist.
  */
 function getUserPrefs() {
     try {
-        var userProperties = PropertiesService.getUserProperties();
+        var userProps = PropertiesService.getUserProperties().getProperties();
     } catch (err) {
         logError(constants.errors.getUserPreferences, err);
         throw constants.errors.getUserPreferences;
     }
 
-    return {
-        language: userProperties.getProperty(constants.props.language),
-        theme: userProperties.getProperty(constants.props.theme),
-        noBackground: userProperties.getProperty(constants.props.noBackground)
-    };
+    return Object.keys(constants.props).reduce(function(result, prop) {
+        var propName = constants.props[prop];
+        result[propName] = userProps[propName];
+        return result;
+    }, {});
 }
 
 /**
- * todo: doc
- * todo: to constants
+ * Gets the list of supported color themes, caching their CSS if necessary.
  *
- * @returns {Array.<string>} a list of all theme names
+ * @param {GoogleAppsScript.Cache.Cache} scriptCache
+ * @returns {Array<string>} a list of all theme names
  */
-function getThemes() {
-    var scriptCache = CacheService.getScriptCache();
-    var html = HtmlService.createHtmlOutputFromFile('styles.html');
-    var xml = XmlService.parse(html.getContent());
-    var root = xml.getRootElement();
-    var styles = root.getChildren();
-
-    var defaultCss = scriptCache.get(constants.themes['default']);
-    // todo: remove http check once cache is flushed after next deployment
-    if (defaultCss && defaultCss.slice(0, 4) !== 'http') {
-        // themes are still cached
-        return styles.map(function getName(style) {
-            var filename = style.getAttribute('id').getValue();
-            return filename.slice(0, -'.css'.length);
-        });
+function getThemesFromCache(scriptCache) {
+    function toThemeName(style) {
+        var filename = style.getAttribute('id').getValue();
+        return filename.slice(0, -'.css'.length);
     }
 
-    return styles.map(function cacheCss(style) {
-        var filename = style.getAttribute('id').getValue();
-        var themeName = filename.slice(0, -'.css'.length);
+    function toThemeNameAndCacheCss(style) {
+        var themeName = toThemeName(style);
         var css = style.getText();
 
         try {
@@ -52,30 +39,60 @@ function getThemes() {
         }
 
         return themeName;
-    });
+    }
+
+    var html = HtmlService.createHtmlOutputFromFile('styles.html');
+    var xml = XmlService.parse(html.getContent());
+    var root = xml.getRootElement();
+    var styles = root.getChildren();
+
+    var defaultCss = scriptCache.get(constants.themes.base);
+    return defaultCss ?
+        styles.map(toThemeName) : // css is still cached
+        styles.map(toThemeNameAndCacheCss);
 }
 
 /**
- * Retrieves a theme's CSS, caching it if necessary.
+ * Gets a theme's CSS, caching it if necessary.
  *
  * @param {string} themeName
- * @returns {string} the theme CSS
+ * @returns {string} the theme's CSS
  */
 function getThemeCss(themeName) {
     var scriptCache = CacheService.getScriptCache();
 
-    var css = scriptCache.get(themeName);
+    var css = getThemeCssFromCache(scriptCache, themeName);
     if (css === null) {
-        // reload and cache the themes
-        getThemes();
+        // reload and cache the theme css
+        getThemesFromCache(scriptCache);
 
-        css = scriptCache.get(themeName);
+        css = getThemeCssFromCache(scriptCache, themeName);
         if (css === null) {
             throw constants.errors.themeNotFound;
         }
     }
 
     return css;
+}
+
+/**
+ * Gets a theme's CSS from the provided cache.
+ *
+ * @param {GoogleAppsScript.Cache.Cache} scriptCache
+ * @param {string} themeName
+ * @returns {string|null} the theme's CSS if cached, null otherwise
+ */
+function getThemeCssFromCache(scriptCache, themeName) {
+    if (themeName !== constants.themes.base) {
+        return scriptCache.get(themeName);
+    }
+
+    // prepend default css to the theme
+    var cached = scriptCache.getAll([constants.themes.base, themeName]);
+    var baseCss = cached[constants.themes.base];
+    var css = cached[themeName];
+
+    return (baseCss && css) ? baseCss + css : null;
 }
 
 function logError(msg, err) {

@@ -2,34 +2,35 @@ var rgbPattern = /^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i;
 
 /**
  * Converts a color of type RGB or any variety of hex to a hex string
- * representation of that color. This function is used to get hex colors
- * to use in HTML tags.
+ * representation of that color. This function is used to get hex colors to
+ * use in HTML tags.
  *
  * @param {string} color as RGB or hex
  * @returns {string} color as six-digit hex, e.g. #0000ff
  */
 function colorToHex(color) {
     color = color.toString();
+
     var isHex = color.indexOf('#') === 0;
-    if (isHex && color.length === 7) {
-        return color;
-    }
-
-    var nums = color.match(rgbPattern);
-    if (nums === null) {
-        if (isHex) {
-            // just in case it's mixed with another style
-            color = color.substring(0, 7);
-            return padHex(color);
+    if (isHex) {
+        if (color.length === 7) {
+            return color;
         }
-        return colors[color];
+
+        color = color.substr(0, 7);
+        return padHex(color);
     }
 
-    var hex = nums.map(function (i) {
-        return parseInt(i, 10).toString(16);
-    }).join('');
+    var rgb = color.match(rgbPattern);
+    if (rgb) {
+        color = [rgb].reduce(function toBase16(result, i) {
+            return result + parseInt(i, 10).toString(16);
+        }, '');
 
-    return padHex(hex);
+        return padHex(color);
+    }
+
+    return colors[color];
 }
 
 /**
@@ -38,15 +39,15 @@ function colorToHex(color) {
  */
 function padHex(hex) {
     if (hex.indexOf('#') === 0) {
-        hex = hex.substring(1);
+        hex = hex.slice(1);
     }
 
     if (hex.length === 3) {
         // this is a thing:
         // https://en.wikipedia.org/wiki/Web_colors#Shorthand_hexadecimal_form
-        const expanded = hex.split('').map(function (c) {
-            return c + c;
-        }).join('');
+        var expanded = hex.split('').reduce(function expand(result, c) {
+            return result + c + c;
+        }, '');
 
         return '#' + expanded;
     }

@@ -2,7 +2,7 @@
  * Gets the text the user has selected. If there is no selection,
  * this function displays an error message.
  *
- * x@return {Array.<string>} the selected text
+ * @return {Array.<string>} the selected text
  */
 function getSelectedText() {
     var selection = DocumentApp.getActiveDocument().getSelection();
@@ -11,25 +11,17 @@ function getSelectedText() {
     }
 
     var elements = selection.getSelectedElements();
+    var result = elements.map(function(e) {
+        var element = e.getElement();
+        var text = element.asText().getText();
 
-    var result = [];
-    elements.forEach(function(e) {
         if (e.isPartial()) {
             var startIndex = e.getStartOffset();
             var endIndex = e.getEndOffsetInclusive();
-
-            text = e.getElement().asText()
-                .getText()
-                .substring(startIndex, endIndex + 1);
-
-            result.push(text);
-        } else {
-            var element = e.getElement();
-            if (element.editAsText) {
-                var text = element.asText().getText();
-                // todo: check if image gets here and is empty string
-                result.push(text);
-            }
+            return text.substring(startIndex, endIndex + 1);
+        } else if (element.editAsText) {
+            // todo: check if image gets here and is empty string
+            return text;
         }
     });
 
@@ -44,13 +36,14 @@ function getSelectedText() {
  * Replaces the current selection with the provided html.
  *
  * @param {GoogleAppsScript.Document.Range} selection
- * @param {string} html todo
+ * @param {string} html
  * @param {boolean} noBackground
  */
 function replaceSelection(selection, html, noBackground) {
+    var body = DocumentApp.getActiveDocument().getBody();
+
     var replaced = false;
     var elements = selection.getRangeElements();
-
     for (var i = elements.length - 1; i >= 0; i--) {
         var rangeElement = elements[i];
         var e = rangeElement.getElement();
@@ -60,13 +53,14 @@ function replaceSelection(selection, html, noBackground) {
         // Logger.log('element: ' + element + ', type: ' + element.getType());
 
         if (rangeElement.isPartial()) {
+            // first or last line
             // Logger.log('parent type: ' + rangeElement.getElement().getParent().getType());
             var start = rangeElement.getStartOffset();
             var end = rangeElement.getEndOffsetInclusive();
             var before = e.editAsText().getText().substring(0, start);
             var after = e.editAsText().getText().substring(end + 1);
             var parent = e.getParent();
-            var attrs = parent.getAttributes();
+            var oldAttrs = parent.getAttributes();
 
             // clearText(parent);
             parent.clear();
@@ -74,11 +68,11 @@ function replaceSelection(selection, html, noBackground) {
             var text;
             if (after) {
                 text = parent.insertText(0, after);
-                text.setAttributes(attrs);
+                text.setAttributes(oldAttrs);
             }
             if (!replaced) {
                 if (!before && !after) {
-                    appendTableWithHTML(parent, html, noBackground);
+                    appendTableWithHTML(body, parent, html, noBackground);
                     parent.removeFromParent();
                 } else {
                     insertHTMLAsText(parent, 0, html, noBackground);
@@ -87,71 +81,25 @@ function replaceSelection(selection, html, noBackground) {
             }
             if (before) {
                 text = parent.insertText(0, before);
-                text.setAttributes(attrs);
+                text.setAttributes(oldAttrs);
             }
         } else {
             if (e.getType() === DocumentApp.ElementType.TEXT) {
-                var msg = 'text element should not be a container';
-                logError(constants.errors.insert, msg);
-                throw constants.errors.insert;
+                // todo: repro this?
+                throw 'text element should not be a container'
             }
 
             if (!replaced) {
-                appendTableWithHTML(e, html, noBackground);
-                removeElement(e);
+                appendTableWithHTML(body, e, html, noBackground);
                 replaced = true;
-            } else {
-                removeElement(e);
             }
+
+            removeElement(e);
         }
     }
 }
 
-/**
- * todo
- *
- * @param html
- * @param {Boolean} noBackground
- */
-function insertAtCursor(html, noBackground) {
-    var cursor = DocumentApp.getActiveDocument().getCursor();
-    var element = cursor.getElement();
-
-    if (element.getType() === DocumentApp.ElementType.PARAGRAPH &&
-        element.asParagraph().getNumChildren() === 0) {
-        appendTableWithHTML(element, html, noBackground);
-        removeElement(element);
-        return;
-    }
-
-    var surroundingText = cursor.getSurroundingText();
-    var surroundingTextOffset = cursor.getSurroundingTextOffset();
-    var surroundingString = surroundingText.getText();
-    var attrs = surroundingText.getAttributes();
-    var before = surroundingString.substring(0, surroundingTextOffset);
-    var after = surroundingString.substring(surroundingTextOffset);
-
-    clearText(element);
-
-    // create temporary text to get access to text interface
-    // todo: hacky
-    var text = cursor.insertText('temp');
-    clearText(text);
-
-    var parent = text.getParent();
-    if (after) {
-        text = parent.insertText(0, after);
-        text.setAttributes(attrs);
-    }
-    insertHTMLAsText(parent, 0, html, noBackground);
-    if (before) {
-        text = parent.insertText(0, before);
-        text.setAttributes(attrs);
-    }
-}
-
-function appendTableWithHTML(element, html, noBackground) {
-    var body = DocumentApp.getActiveDocument().getBody();
+function appendTableWithHTML(body, element, html, noBackground) {
     var index = body.getChildIndex(element) + 1;
     var table = body.insertTable(index);
 
@@ -170,7 +118,8 @@ function appendTableWithHTML(element, html, noBackground) {
 
 function insertHTMLAsText(element, index, html, noBackground, cell) {
     var attrs = {};
-    attrs[DocumentApp.Attribute.FONT_FAMILY] = constants.document.fonts.consolas;
+    attrs[DocumentApp.Attribute.FONT_FAMILY] =
+        constants.document.fonts.consolas;
 
     // disable font style attrs by default so they don't carry over to new elements
     // todo: might not be necessary now that we're handling it up the stack
@@ -301,6 +250,7 @@ function removeElement(element) {
  * @returns {GoogleAppsScript.Document.Text}
  */
 function clearText(element) {
+    // todo: hasOwnProperty?
     if (element.editAsText) {
         var text = element.editAsText();
         var textLen = text.getText().length;
