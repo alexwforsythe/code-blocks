@@ -1,6 +1,6 @@
 {
   "name": "code-blocks",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "repository": "https://github.com/alexwforsythe/code-blocks",
   "license": "MIT",
   "devDependencies": {
@@ -15,15 +15,12 @@
   },
   "scripts": {
     "clean": "rm -rf ./dist",
-
     "dist:gas": ". ./tools.sh && dist_gas",
     "dist:js": ". ./tools.sh && dist_js",
     "dist:static": ". ./tools.sh && dist_static",
     "dist": "npm run dist:gas && npm run dist:js && npm run dist:static",
-
     "link": "cd ./dist && gas link $(cat ../.gas/ID)",
     "pushOnly": "cd ./dist && gas push",
-
     "push:js": "npm run dist:js && npm run pushOnly",
     "push:gas": "npm run dist:gas && npm run pushOnly",
     "push": "npm run clean && npm run dist && npm run link && npm run pushOnly"
