@@ -23,7 +23,7 @@ function colorToHex(color) {
 
     var rgb = color.match(rgbPattern);
     if (rgb) {
-        color = [rgb].reduce(function toBase16(result, i) {
+        color = rgb.slice(1, 4).reduce(function toBase16(result, i) {
             return result + parseInt(i, 10).toString(16);
         }, '');
 
