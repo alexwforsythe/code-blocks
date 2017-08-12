@@ -180,7 +180,12 @@ function getHighlightedBlock(text, css, language, noBackground) {
 
     var highlighted = block.prop('outerHTML');
     if (css) {
-        highlighted = juice.inlineContent(highlighted, css);
+        var opts = {
+            applyHeightAttributes: false,
+            applyWidthAttributes: false,
+            inlinePseudoElements: false
+        };
+        highlighted = juice.inlineContent(highlighted, css, opts);
     }
 
     block = $($.parseHTML(highlighted));

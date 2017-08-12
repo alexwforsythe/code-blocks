@@ -10,18 +10,12 @@ dist_gas () {
     cp ./server/*.js ${dist_dir}
 }
 
-bundle_js () {
-    input_file="./client/sidebar.js"
-    browserify -t 'uglifyify' ${input_file} | uglifyjs > ${bundle_file}
-}
-
 dist_js () {
-    bundle_js
-
     # wrap bundled js in script tags and rename as html
+    input_file="./client/sidebar.js"
     output_file="${dist_dir}/${bundle_filename}.html"
     echo "<script>" > ${output_file}
-    cat ${bundle_file} >> ${output_file}
+    browserify -t 'uglifyify' ${input_file} | uglifyjs >> ${output_file}
     echo "</script>" >> ${output_file}
 }
 
@@ -29,28 +23,26 @@ dist_html () {
     cp ./client/*.html ${dist_dir}
 }
 
-bundle_css () {
-    # wrap all theme css in style tags and bundle into html
+dist_css () {
+    test_file="sidebar.min.css"
     output_file="${dist_dir}/styles.html"
-    echo "<html>" >> ${output_file}
+
+    optimizations="optimizeBackground:off;"
+    optimizations+="replaceMultipleZeros:off;"
+    optimizations+="specialComments:off"
+
+    # wrap all theme css in style tags and bundle into html
+    echo "<html>" > ${output_file}
     for filename in node_modules/highlight.js/styles/*.css; do
-        base_name=$(basename ${filename})
-        echo "<style id=\"${base_name}\">" >> ${output_file}
-        cat ${filename} >> ${output_file}
-        echo "</style>" >> ${output_file}
+        theme_name=$(basename ${filename} .css)
+        if [[ ${theme_name} != 'darkula' ]]; then
+            theme="<style id=\"${theme_name}\">"
+            theme+=$(cleancss --debug -O1 ${optimizations} ${filename})
+            theme+="</style>"
+            echo ${theme} >> ${output_file}
+        fi
     done
     echo "</html>" >> ${output_file}
-
-    # replace weird block comment specifiers ("/*!" -> "/**")
-    sed -i -e s:\/\*\!:\*: ${output_file}
-}
-
-dist_css () {
-    bundle_css
-
-    # minify css
-    html-minifier --remove-comments --minify-css -o ${output_file} ${output_file}
-    [[ -f "${output_file}-e" ]] && rm "${output_file}-e"
 }
 
 dist_static () {
