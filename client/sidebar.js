@@ -152,7 +152,7 @@ function populateUserPrefs(prefs, themes) {
         }
     }
 
-    if (prefs.noBackground === 'true') {
+    if (prefs.noBackground.toString() === 'true') {
         $(ids.noBackground).prop('checked', true);
     }
 }
@@ -174,7 +174,9 @@ function getHighlightedBlock(text, css, language, noBackground) {
     if (language !== languageAuto) {
         block.addClass(language);
     }
-    hljs.highlightBlock(block[0]); // todo: why [0]?
+
+    var node = block[0];
+    hljs.highlightBlock(node);
 
     var highlighted = block.prop('outerHTML');
     if (css) {
