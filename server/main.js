@@ -71,11 +71,11 @@ function getThemesAndUserPrefs() {
  */
 function getSelectionAndThemeCss(language, theme, noBackground) {
     // save user preferences
-    var userProperties = {};
-    userProperties[constants.props.language] = language;
-    userProperties[constants.props.theme] = theme;
-    userProperties[constants.props.noBackground] = noBackground;
-    PropertiesService.getUserProperties().setProperties(userProperties);
+    PropertiesService.getUserProperties().setProperties({
+        language: language,
+        theme: theme,
+        noBackground: noBackground
+    });
 
     var css = getThemeCss(theme);
     var text = getSelectedText();
@@ -100,11 +100,7 @@ function getSelectionAndThemeCss(language, theme, noBackground) {
  * @param {boolean} noBackground
  */
 function insertBlock(html, noBackground) {
-    var selection = DocumentApp.getActiveDocument().getSelection();
-    if (!selection) {
-        throw constants.errors.selectText;
-    }
-
+    var selection = getSelection();
     try {
         replaceSelection(selection, html, noBackground);
     } catch (err) {

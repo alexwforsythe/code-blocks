@@ -9,15 +9,11 @@ var constants = {
         selectText: 'Please select some text.',
         themeNotFound: 'Couldn\'t get theme.'
     },
-    props: {
-        language: 'language',
-        theme: 'theme',
-        noBackground: 'no_background'
-    },
     themes: {
         base: 'default'
     },
     document: {
+        font: 'Consolas',
         /**
          * A map of CSS attributes to document attributes
          */
@@ -33,15 +29,12 @@ var constants = {
             'line-through': DocumentApp.Attribute.STRIKETHROUGH,
             underline: DocumentApp.Attribute.UNDERLINE
         },
-        htmlAttrs: {
+        cssAttrs: {
             fontWeight: 'font-weight',
             fontStyle: 'font-style',
             textDecoration: 'text-decoration',
             background: 'background',
             color: 'color'
-        },
-        fonts: {
-            consolas: 'Consolas'
         }
     }
 };

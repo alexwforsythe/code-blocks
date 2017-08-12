@@ -9,11 +9,11 @@ function getUserPrefs() {
         throw constants.errors.getUserPreferences;
     }
 
-    return Object.keys(constants.props).reduce(function(result, prop) {
-        var propName = constants.props[prop];
-        result[propName] = userProps[propName];
-        return result;
-    }, {});
+    return {
+        language: userProps.language,
+        theme: userProps.theme,
+        noBackground: userProps.noBackground
+    }
 }
 
 /**
@@ -23,13 +23,22 @@ function getUserPrefs() {
  * @returns {Array<string>} a list of all theme names
  */
 function getThemesFromCache(scriptCache) {
-    function toThemeName(style) {
-        var filename = style.getAttribute('id').getValue();
-        return filename.slice(0, -'.css'.length);
+    var html = HtmlService.createHtmlOutputFromFile('styles.html');
+    var xml = XmlService.parse(html.getContent());
+    var root = xml.getRootElement();
+    var styles = root.getChildren();
+
+    var defaultCss = scriptCache.get(constants.themes.base);
+    if (defaultCss) {
+        // css is still cached
+        return styles.map(function toThemeName(style) {
+            return style.getAttribute('id').getValue();
+        });
     }
 
-    function toThemeNameAndCacheCss(style) {
-        var themeName = toThemeName(style);
+    // need to cache themes
+    return styles.map(function toThemeNameAndCacheCss(style) {
+        var themeName = style.getAttribute('id').getValue();
         var css = style.getText();
 
         try {
@@ -39,17 +48,7 @@ function getThemesFromCache(scriptCache) {
         }
 
         return themeName;
-    }
-
-    var html = HtmlService.createHtmlOutputFromFile('styles.html');
-    var xml = XmlService.parse(html.getContent());
-    var root = xml.getRootElement();
-    var styles = root.getChildren();
-
-    var defaultCss = scriptCache.get(constants.themes.base);
-    return defaultCss ?
-        styles.map(toThemeName) : // css is still cached
-        styles.map(toThemeNameAndCacheCss);
+    });
 }
 
 /**
@@ -93,6 +92,11 @@ function getThemeCssFromCache(scriptCache, themeName) {
     var css = cached[themeName];
 
     return (baseCss && css) ? baseCss + css : null;
+}
+
+function clone(obj) {
+    // todo: optimize?
+    return JSON.parse(JSON.stringify(obj));
 }
 
 function logError(msg, err) {
