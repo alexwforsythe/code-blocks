@@ -11,8 +11,9 @@ var rgbPattern = /^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i;
 function colorToHex(color) {
     color = color.toString();
 
-    var isHex = color.indexOf('#') === 0;
-    if (isHex) {
+    var start = color.indexOf('#');
+    if (start !== -1) {
+        color = color.slice(start);
         if (color.length === 7) {
             return color;
         }
