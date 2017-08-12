@@ -24,6 +24,10 @@ var constants = {
         docAttrs: {
             background: DocumentApp.Attribute.BACKGROUND_COLOR,
             bold: DocumentApp.Attribute.BOLD,
+            bolder: DocumentApp.Attribute.BOLD,
+            '700': DocumentApp.Attribute.BOLD, // juice transforms bold to 700
+            normal: undefined, // to reset bold
+            '400': undefined,
             color: DocumentApp.Attribute.FOREGROUND_COLOR,
             italic: DocumentApp.Attribute.ITALIC,
             'line-through': DocumentApp.Attribute.STRIKETHROUGH,
