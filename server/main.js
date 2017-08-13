@@ -67,9 +67,9 @@ function getThemesAndUserPrefs() {
  * @param {string} language
  * @param {string} theme
  * @param {boolean} noBackground
- * @returns {{css: string, selection: string}}
+ * @returns {{selection: string, css: string}}
  */
-function getSelectionAndThemeCss(language, theme, noBackground) {
+function getSelectionAndThemeCssForPreview(language, theme, noBackground) {
     // save user preferences
     PropertiesService.getUserProperties().setProperties({
         language: language,
@@ -77,36 +77,87 @@ function getSelectionAndThemeCss(language, theme, noBackground) {
         noBackground: noBackground
     });
 
+    var selection = getSelection();
+    var selectedText = getSelectedText(selection);
     var css = getThemeCss(theme);
-    var text = getSelectedText();
-    var selection = text.join('\n');
+
+    // hash the selected text and cache it
+    var userCache = CacheService.getUserCache();
+    var hash = Utilities.computeDigest(
+        Utilities.DigestAlgorithm.MD5, selectedText
+    );
+    var hashVal = JSON.stringify(hash);
+    userCache.put(constants.cache.previewText, hashVal);
 
     return {
-        css: css,
-        selection: selection
+        selection: selectedText,
+        css: css
     };
 }
 
 // noinspection JSUnusedGlobalSymbols
 /**
- *
  * Replaces the text of the current selection with the provided block, or
- * inserts the block at the current cursor location. (There will always be
- * either a selection or a cursor.) If multiple elements are selected, only
- * inserts the block in the first element that can contain text and removes the
- * other elements.
+ * throws an error if there is no selection. If multiple elements are selected,
+ * only inserts the block in the first element that can contain text and
+ * removes the other elements.
  *
  * @param {string} html the HTML to replace the current selection with
  * @param {boolean} noBackground
+ * @param {GoogleAppsScript.Document.Range|undefined} selection
  */
-function insertBlock(html, noBackground) {
-    var selection = getSelection();
+function insertCode(html, noBackground, selection) {
+    if (!selection) {
+        selection = getSelection();
+    }
     try {
-        replaceSelection(selection, html, noBackground);
+        replaceSelection(selection, html, noBackground)
     } catch (err) {
         logError(constants.errors.insert, err);
         throw constants.errors.insert;
     }
+}
+
+// noinspection JSUnusedGlobalSymbols
+/**
+ * Replaces the text of the current selection with the provided block if the
+ * user's selection has not changed since the last preview was rendered, or
+ * gets the user-selected text and CSS for the selected theme.
+ *
+ * @param {string} html the preview HTML
+ * @param {string} theme
+ * @param {boolean} noBackground
+ * @returns {{css: string, selection: string}|undefined}
+ */
+function insertCodeOrGetSelectionAndThemeCss(html, theme, noBackground) {
+    var selection = getSelection();
+
+    var userCache = CacheService.getUserCache();
+    var previewTextDigest = userCache.get(constants.cache.previewText);
+    previewTextDigest = JSON.parse(previewTextDigest);
+    if (previewTextDigest) {
+        var selectedText = getSelectedText(selection);
+        var selectedTextDigest = Utilities.computeDigest(
+            Utilities.DigestAlgorithm.MD5, selectedText
+        );
+    }
+
+    if (arraysAreEqual(selectedTextDigest, previewTextDigest)) {
+        var oldNoBackground = UserProperties.getProperty('noBackground');
+        if (noBackground === oldNoBackground) {
+            // the selection hasn't changed since the last preview,
+            // so we can insert the provided html
+            insertCode(html, noBackground, selection);
+            return;
+        }
+    }
+
+    // the selection has changed,
+    // so we need to send it to the client to be highlighted
+    return {
+        selection: getSelectedText(selection),
+        css: getThemeCss(theme)
+    };
 }
 
 // noinspection JSUnusedGlobalSymbols

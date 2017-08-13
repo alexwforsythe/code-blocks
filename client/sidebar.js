@@ -44,6 +44,7 @@ $(function () {
  * the sidebar UI with the resulting block.
  */
 function preview() {
+    // noinspection JSUnusedGlobalSymbols
     this.disabled = true;
     $(ids.error).remove();
 
@@ -54,7 +55,7 @@ function preview() {
     google.script.run
         .withFailureHandler(showErrorButtons)
         .withSuccessHandler(function renderPreview(result, element) {
-            const block = getHighlightedBlock(
+            const block = createHighlightedBlock(
                 result.selection,
                 result.css,
                 language,
@@ -63,10 +64,11 @@ function preview() {
 
             // render preview
             $(ids.preview).replaceWith(block);
+
             element.disabled = false;
         })
         .withUserObject(this)
-        .getSelectionAndThemeCss(language, theme, noBackground);
+        .getSelectionAndThemeCssForPreview(language, theme, noBackground);
 }
 
 /**
@@ -74,6 +76,7 @@ function preview() {
  * that text in the active document with the resulting block.
  */
 function highlight() {
+    // noinspection JSUnusedGlobalSymbols
     this.disabled = true;
     $(ids.error).remove();
 
@@ -81,13 +84,17 @@ function highlight() {
     const theme = $(ids.theme + ' option:selected').text();
     const noBackground = $(ids.noBackground).is(':checked');
 
+    const html = $(ids.preview).prop('outerHTML');
     google.script.run
         .withFailureHandler(showErrorButtons)
-        .withSuccessHandler(function insertBlock(result, element) {
-            const block = getHighlightedBlock(
-                result.selection,
-                result.css,
-                language, noBackground
+        .withSuccessHandler(function onSuccess(result, element) {
+            if (!result) {
+                // code has already been inserted from preview
+                return focusEditor(result, element);
+            }
+
+            const block = createHighlightedBlock(
+                result.selection, result.css, language, noBackground
             );
             const html = block.prop('outerHTML');
 
@@ -95,10 +102,10 @@ function highlight() {
                 .withFailureHandler(showErrorButtons)
                 .withSuccessHandler(focusEditor)
                 .withUserObject(element)
-                .insertBlock(html, noBackground);
+                .insertCode(html, noBackground);
         })
         .withUserObject(this)
-        .getSelectionAndThemeCss(language, theme, noBackground);
+        .insertCodeOrGetSelectionAndThemeCss(html, theme, noBackground);
 }
 
 /*
@@ -111,7 +118,7 @@ function highlight() {
 function populateLanguages() {
     const languageSelect = $(ids.language);
     languageSelect.append(languages.map(function toOption(language) {
-        return '<option value="' + language + '">' + language + '</option>'
+        return '<option value="' + language + '">' + language + '</option>';
     }));
 }
 
@@ -164,7 +171,7 @@ function populateUserPrefs(prefs, themes) {
  * @param {boolean} noBackground whether to use the default background color
  * @returns {string} the highlighted block as HTML with inline CSS
  */
-function getHighlightedBlock(text, css, language, noBackground) {
+function createHighlightedBlock(text, css, language, noBackground) {
     text = replaceSpecialChars(text);
 
     var block = $(ids.preview).clone();
@@ -237,8 +244,14 @@ function showError(msg, elementId) {
     $(elementId).after(div);
 }
 
-function replaceSpecialChars(html) {
-    return html
+/**
+ *
+ * @param {string} text
+ * @returns {string} the text with special characters replaced
+ */
+function replaceSpecialChars(text) {
+    // todo: can be optimized?
+    return text
         .replace(/[\u2018\u2019\u201A\uFFFD]/g, '\'')
         .replace(/[\u201c\u201d\u201e]/g, '"')
         .replace(/\u02C6/g, '^')

@@ -94,9 +94,34 @@ function getThemeCssFromCache(scriptCache, themeName) {
     return (baseCss && css) ? baseCss + css : null;
 }
 
-function clone(obj) {
+function cloneObj(obj) {
     // todo: optimize?
     return JSON.parse(JSON.stringify(obj));
+}
+
+/**
+ * @param {Array<*>} lhs
+ * @param {Array<*>} rhs
+ * @returns {boolean}
+ */
+function arraysAreEqual(lhs, rhs) {
+    if (lhs === rhs) {
+        return true;
+    }
+    if (lhs === null || rhs === null) {
+        return false;
+    }
+    if (lhs.length !== rhs.length) {
+        return false;
+    }
+
+    for (var i = 0; i < lhs.length; i++) {
+        if (lhs[i] !== rhs[i]) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function logError(msg, err) {

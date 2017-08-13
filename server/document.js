@@ -15,10 +15,10 @@ function getSelection() {
  * Gets the text the user has selected. If there is no selection,
  * this function displays an error message.
  *
- * @return {Array.<string>} the selected text
+ * @param {GoogleAppsScript.Document.Range} selection
+ * @return {string} the selected text
  */
-function getSelectedText() {
-    var selection = getSelection();
+function getSelectedText(selection) {
     var elements = selection.getSelectedElements();
     var result = elements.map(function(e) {
         var element = e.getElement();
@@ -40,7 +40,7 @@ function getSelectedText() {
         throw constants.errors.selectText;
     }
 
-    return result;
+    return result.join('\n');
 }
 
 /**
@@ -199,7 +199,7 @@ function insertChildren(element, index, node, attrs, noBackground) {
 }
 
 function extendFromStyle(oldAttrs, style, noBackground) {
-    var attrs = clone(oldAttrs);
+    var attrs = cloneObj(oldAttrs);
     if (!style) {
         return attrs;
     }
@@ -228,6 +228,7 @@ function extendFromStyle(oldAttrs, style, noBackground) {
  */
 function setDocAttr(attrs, prop, val, noBackground) {
     // handle special cases
+    // noinspection FallThroughInSwitchStatementJS
     switch (prop) {
         // font style
         case constants.document.cssAttrs.fontWeight:

@@ -1,7 +1,8 @@
 var constants = {
     title: 'Code Blocks',
     cache: {
-        ttl: 3600 // in seconds
+        ttl: 3600, // in seconds
+        previewText: 'preview_text'
     },
     errors: {
         insert: 'Can\'t insert here.',
