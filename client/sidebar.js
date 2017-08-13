@@ -27,16 +27,16 @@ $(function () {
 
     google.script.run
         .withFailureHandler(showErrorThemes)
-        .withSuccessHandler(function onSuccess(result, element) {
+        .withSuccessHandler(function onSuccess(result) {
             populateThemes(result.themes);
             populateUserPrefs(result.prefs, result.themes);
+
+            $(ids.highlight).click(highlight);
+            $(ids.showPreview).click(preview);
+
+            enableUiElements();
         })
         .getThemesAndUserPrefs();
-
-    $(ids.highlight).click(highlight);
-    $(ids.showPreview).click(preview);
-
-    enableUiElements();
 });
 
 /**
