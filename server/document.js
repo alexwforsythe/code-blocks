@@ -61,7 +61,6 @@ function replaceSelection(selection, html, noBackground) {
         var rangeElement = elements[i];
         var e = rangeElement.getElement();
 
-        // todo: figure out what different selections look like
         // Logger.log(i);
         // Logger.log('rangeElement: ' + rangeElement + ', isPartial: ' + rangeElement.isPartial());
         // Logger.log('element: ' + e + ', type: ' + e.getType());
@@ -145,7 +144,7 @@ function appendTableWithHtml(body, element, html, noBackground) {
  * document, respecting the 'style' attribute when possible. Each child node
  * inherits style properties from its parent.
  *
- * @param {GoogleAppsScript.Document.Element} element
+ * @param {GoogleAppsScript.Document.ContainerElement} element
  * @param {number} index
  * @param {string} html
  * @param {boolean} noBackground
@@ -159,8 +158,8 @@ function insertHtmlAsText(element, index, html, noBackground, cell) {
 
     // set cell background color
     if (cell && !noBackground) {
-        var style = root.getAttribute('style');
-        var rootAttrs = extendFromStyle({}, style);
+        var rootStyle = root.getAttribute('style');
+        var rootAttrs = extendFromStyle({}, rootStyle);
         var rootBgc = rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
         if (rootBgc) {
             rootBgc = colorToHex(rootBgc);
@@ -171,33 +170,41 @@ function insertHtmlAsText(element, index, html, noBackground, cell) {
     var baseAttrs = {};
     baseAttrs[DocumentApp.Attribute.FONT_FAMILY] = constants.document.font;
     // disable font style attrs so they don't carry over to new elements
-    baseAttrs[DocumentApp.Attribute.BOLD] = false;
-    baseAttrs[DocumentApp.Attribute.ITALIC] = false;
-    baseAttrs[DocumentApp.Attribute.UNDERLINE] = false;
-    baseAttrs[DocumentApp.Attribute.STRIKETHROUGH] = false;
+    [
+        DocumentApp.Attribute.BOLD,
+        DocumentApp.Attribute.ITALIC,
+        DocumentApp.Attribute.UNDERLINE,
+        DocumentApp.Attribute.STRIKETHROUGH
+    ].forEach(function remove(attr) {
+       delete baseAttrs[attr];
+    });
 
-    insertChildren(element, index, root, baseAttrs, noBackground);
-}
+    // insert nodes
+    var children = [{
+        node: root,
+        attrs: baseAttrs
+    }];
+    while (children.length > 0) {
+        var child = children.pop();
+        var type = child.node.getType();
 
-function insertChildren(element, index, node, attrs, noBackground) {
-    if (node.getType() === XmlService.ContentTypes.TEXT) {
-        var str = node.getText();
-        var text = element.insertText(index, str);
-        text.setAttributes(attrs);
-        return;
-    }
+        if (type === XmlService.ContentTypes.TEXT) {
+            var str = child.node.getText();
+            var text = element.insertText(index, str);
+            text.setAttributes(child.attrs);
+        } else if (type === XmlService.ContentTypes.ELEMENT) {
+            // pass new style attributes down the stack
+            var e = child.node.asElement();
+            var style = e.getAttribute('style');
+            var childAttrs = extendFromStyle(child.attrs, style, noBackground);
 
-    // reverse pre-order traversal
-    if (node.getType() === XmlService.ContentTypes.ELEMENT) {
-        var child = node.asElement();
-        var style = child.getAttribute('style');
-
-        // pass new style attributes down the stack
-        var childAttrs = extendFromStyle(attrs, style, noBackground);
-
-        var children = child.getAllContent();
-        for (var i = children.length - 1; i >= 0; i--) {
-            insertChildren(element, index, children[i], childAttrs);
+            var newNodes = e.getAllContent();
+            newNodes.forEach(function addChild(node) {
+                children.push({
+                    node: node,
+                    attrs: childAttrs
+                });
+            });
         }
     }
 }
