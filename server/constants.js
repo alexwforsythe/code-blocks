@@ -8,7 +8,8 @@ var constants = {
         insert: 'Can\'t insert here.',
         getUserPreferences: 'Couldn\'t get user preferences.',
         selectText: 'Please select some text.',
-        themeNotFound: 'Couldn\'t get theme.'
+        themeNotFound: 'Couldn\'t get theme.',
+        getSelection: 'Couldn\'t get selection.'
     },
     themes: {
         base: 'default'
@@ -16,7 +17,7 @@ var constants = {
     document: {
         font: 'Consolas',
         /**
-         * A map of CSS attributes to document attributes
+         * A map of CSS attributes to document attributes.
          */
         docAttrs: {
             background: DocumentApp.Attribute.BACKGROUND_COLOR,

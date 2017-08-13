@@ -20,21 +20,23 @@ function getSelection() {
  */
 function getSelectedText(selection) {
     var elements = selection.getSelectedElements();
-    var result = elements.map(function(e) {
-        var element = e.getElement();
-        var text = element.asText().getText();
+    try {
+        var result = elements.map(function (e) {
+            var element = e.getElement();
+            var text = element.asText().getText();
 
-        if (e.isPartial()) {
-            var startIndex = e.getStartOffset();
-            var endIndex = e.getEndOffsetInclusive();
-            return text.slice(startIndex, endIndex + 1);
-        } else if (element.editAsText) {
-            // todo: check if image gets here and is empty string
-            Logger.log('in getSelectedText, element has editAsText');
-            Logger.log('element: %s', element);
-            return text;
-        }
-    });
+            if (e.isPartial()) {
+                var startIndex = e.getStartOffset();
+                var endIndex = e.getEndOffsetInclusive();
+                return text.slice(startIndex, endIndex + 1);
+            } else if (element.editAsText) {
+                return text;
+            }
+        });
+    } catch (err) {
+        logError(constants.errors.getSelection, err);
+        throw constants.errors.getSelection;
+    }
 
     if (!result) {
         throw constants.errors.selectText;
@@ -139,7 +141,9 @@ function appendTableWithHtml(body, element, html, noBackground) {
 }
 
 /**
- * todo: doc
+ * Parses an HTML block as XML and inserts all of it's children into the
+ * document, respecting the 'style' attribute when possible. Each child node
+ * inherits style properties from its parent.
  *
  * @param {GoogleAppsScript.Document.Element} element
  * @param {number} index
