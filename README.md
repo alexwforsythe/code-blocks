@@ -44,25 +44,12 @@ $ npm run dist
 **NOTE:** The following command only works for the project maintainer,
 because it requires the user to be authenticated via Google Drive.
 
-Just GAS files:
-```
-$ npm run push:gas
-```
-
-Just `sidebar.js`:
-```
-$ npm run push:js
-```
-
-Just HTML & CSS:
-```
-$ npm run push:static
-```
-
-Everything:
-```
-$ npm run push
-```
+| Command | Description |
+| --- | --- |
+| npm run push:gas | just GAS files |
+| npm run push:js | just `sidebar.js` |
+| npm run push:static | just HTML & CSS |
+| npm run push | everything |
 
 ## Resources
 
