@@ -70,13 +70,6 @@ function getThemesAndUserPrefs() {
  * @returns {{selection: string, css: string}}
  */
 function getSelectionAndThemeCssForPreview(language, theme, noBackground) {
-    // save user preferences
-    PropertiesService.getUserProperties().setProperties({
-        language: language,
-        theme: theme,
-        noBackground: noBackground
-    });
-
     var selection = getSelection();
     var selectedText = getSelectedText(selection);
     var css = getThemeCss(theme);
@@ -88,6 +81,13 @@ function getSelectionAndThemeCssForPreview(language, theme, noBackground) {
     );
     var hashVal = JSON.stringify(hash);
     userCache.put(constants.cache.previewText, hashVal);
+
+    // save user preferences
+    PropertiesService.getUserProperties().setProperties({
+        language: language,
+        theme: theme,
+        noBackground: noBackground
+    });
 
     return {
         selection: selectedText,
@@ -125,11 +125,14 @@ function insertCode(html, noBackground, selection) {
  * gets the user-selected text and CSS for the selected theme.
  *
  * @param {string} html the preview HTML
+ * @param {string} language
  * @param {string} theme
  * @param {boolean} noBackground
  * @returns {{css: string, selection: string}|undefined}
  */
-function insertCodeOrGetSelectionAndThemeCss(html, theme, noBackground) {
+function insertCodeOrGetSelectionAndThemeCss(
+    html, language, theme, noBackground
+) {
     var selection = getSelection();
 
     var userCache = CacheService.getUserCache();
@@ -151,6 +154,13 @@ function insertCodeOrGetSelectionAndThemeCss(html, theme, noBackground) {
             return;
         }
     }
+
+    // save user preferences
+    PropertiesService.getUserProperties().setProperties({
+        language: language,
+        theme: theme,
+        noBackground: noBackground
+    });
 
     // the selection has changed,
     // so we need to send it to the client to be highlighted

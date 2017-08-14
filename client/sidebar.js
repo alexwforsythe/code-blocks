@@ -105,7 +105,9 @@ function highlight() {
                 .insertCode(html, noBackground);
         })
         .withUserObject(this)
-        .insertCodeOrGetSelectionAndThemeCss(html, theme, noBackground);
+        .insertCodeOrGetSelectionAndThemeCss(
+            html, language, theme, noBackground
+        );
 }
 
 /*
