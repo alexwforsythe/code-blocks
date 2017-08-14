@@ -46,83 +46,104 @@ function getSelectedText(selection) {
 }
 
 /**
- * Replaces the current selection with the provided html.
+ * Replaces the current selection with the provided HTML. This is gnarly.
  *
  * @param {GoogleAppsScript.Document.Range} selection
  * @param {string} html
  * @param {boolean} noBackground
  */
 function replaceSelection(selection, html, noBackground) {
-    var body = DocumentApp.getActiveDocument().getBody();
+    var block = XmlService.parse(html);
+    var root = block.getRootElement();
 
     var replaced = false;
-    var elements = selection.getRangeElements();
-    for (var i = elements.length - 1; i >= 0; i--) {
-        var rangeElement = elements[i];
-        var e = rangeElement.getElement();
+    var ranges = selection.getRangeElements();
+    for (var i = ranges.length - 1; i >= 0; i--) {
+        var range = ranges[i];
+        var element = range.getElement();
 
-        // Logger.log(i);
-        // Logger.log('rangeElement: ' + rangeElement + ', isPartial: ' + rangeElement.isPartial());
-        // Logger.log('element: ' + e + ', type: ' + e.getType());
-
-        if (rangeElement.isPartial()) {
-            // first or last line
-            // Logger.log('parent type: ' + rangeElement.getElement().getParent().getType());
-            var start = rangeElement.getStartOffset();
-            var end = rangeElement.getEndOffsetInclusive();
+        // handle partials first
+        if (range.isPartial()) {
+            var parent = element.getParent();
+            var asText = element.editAsText();
+            var text = asText.getText();
+            var start = range.getStartOffset();
+            var end = range.getEndOffsetInclusive();
 
             // keep copies of surrounding text
-            var before = e.editAsText().getText().substring(0, start);
-            var after = e.editAsText().getText().substring(end + 1);
+            var before = start !== -1 && text.slice(0, start);
+            var after = end !== -1 && text.slice(end + 1);
+            var beforeEndsWithCr = before &&
+                before.charAt(before.length - 1) === '\r';
+            var afterStartsWithCr = after &&
+                after.charAt(0) === '\r';
 
-            var parent = e.getParent();
-            var oldAttrs = parent.getAttributes();
-            // clearText(parent);
-            parent.clear();
+            if (beforeEndsWithCr && afterStartsWithCr) {
+                // e.g. selection is full line with text above and below
+                if (!replaced) {
+                    // copy before & after as text elements (with attrs)
+                    var copyBefore = asText.copy();
+                    var copyAfter = asText.copy();
+                    copyBefore = copyBefore.deleteText(start, text.length - 1);
+                    copyAfter = copyAfter.deleteText(0, end);
 
-            var text;
-            if (after) {
-                // insert "after" text first
-                text = parent.insertText(0, after);
-                text.setAttributes(oldAttrs);
-            }
-            if (!replaced) {
-                if (!before && !after) {
-                    // use a table if surrounding text is empty
-                    appendTableWithHtml(body, parent, html, noBackground);
-                    parent.removeFromParent();
-                } else {
-                    // otherwise just highlight the partial
-                    insertHtmlAsText(parent, 0, html, noBackground, undefined);
+                    // remove original element
+                    element.removeFromParent();
+
+                    // append to parent: before, table, after
+                    parent.appendText(copyBefore);
+                    var table = appendTableWithHtml(parent, root, noBackground);
+                    var body = DocumentApp.getActiveDocument().getBody();
+                    var index = body.getChildIndex(table);
+                    var par = body.insertParagraph(index + 1, '');
+                    par.appendText(copyAfter);
+                    replaced = true;
                 }
+            } else if (before || after) {
+                // e.g. selection is full line with empty line above or below
+                if (!after && beforeEndsWithCr) {
+                    if (!replaced) {
+                        appendTableWithHtml(parent, root, noBackground);
+                        replaced = true;
+                    }
+                } else if (!before && afterStartsWithCr) {
+                    if (!replaced) {
+                        var nextContainer =
+                            element.getParent().getPreviousSibling();
+                        appendTableWithHtml(nextContainer, root, noBackground);
+                        replaced = true;
+                    }
+                }
+                // e.g. selection is part of a line
+                asText.deleteText(start, end);
+                if (!replaced) {
+                    // just insert text with no table
+                    insertHtmlAsText(element, root, start, noBackground);
+                    replaced = true;
+                }
+            } else if (!replaced) {
+                // e.g. selection is line with empty lines above and below
+                appendTableWithHtml(parent, root, noBackground);
+                parent.removeFromParent();
                 replaced = true;
-            }
-            if (before) {
-                // finally, insert the "before" text
-                text = parent.insertText(0, before);
-                text.setAttributes(oldAttrs);
             }
         } else {
-            if (e.getType() === DocumentApp.ElementType.TEXT) {
-                // todo: repro this?
-                throw 'text element should not be a container'
-            }
-
-            // no surrounding text, so just insert a table
+            // e.g. selection is full container element
             if (!replaced) {
-                appendTableWithHtml(body, e, html, noBackground);
+                appendTableWithHtml(element, root, noBackground);
                 replaced = true;
             }
-
-            removeElement(e);
+            element.removeFromParent();
         }
     }
 }
 
-function appendTableWithHtml(body, element, html, noBackground) {
+function appendTableWithHtml(element, root, noBackground) {
+    var body = DocumentApp.getActiveDocument().getBody();
+
     // insert table
-    var index = body.getChildIndex(element) + 1;
-    var table = body.insertTable(index);
+    var index = body.getChildIndex(element);
+    var table = body.insertTable(index + 1);
 
     // remove border
     table.setBorderWidth(0);
@@ -131,7 +152,18 @@ function appendTableWithHtml(body, element, html, noBackground) {
     var cell = table.appendTableRow().appendTableCell();
     var par = cell.appendParagraph('');
 
-    insertHtmlAsText(par, 0, html, noBackground, cell);
+    // set cell background color
+    if (!noBackground) {
+        var rootStyle = root.getAttribute('style');
+        var rootAttrs = extendFromStyle({}, rootStyle);
+        var rootBgc = rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
+        if (rootBgc) {
+            rootBgc = colorToHex(rootBgc);
+            cell.setBackgroundColor(rootBgc);
+        }
+    }
+
+    insertHtmlAsText(par, root, 0, noBackground);
 
     // clean up cell (remove initial paragraph)
     cell.getChild(0).removeFromParent();
@@ -145,39 +177,22 @@ function appendTableWithHtml(body, element, html, noBackground) {
  * inherits style properties from its parent.
  *
  * @param {GoogleAppsScript.Document.ContainerElement} element
+ * @param {GoogleAppsScript.XML.Document.Element} root
  * @param {number} index
- * @param {string} html
  * @param {boolean} noBackground
- * @param {GoogleAppsScript.Document.TableCell|undefined} cell
  */
-function insertHtmlAsText(element, index, html, noBackground, cell) {
-    var block = XmlService.parse(html);
-    var root = block.getRootElement();
-
-    // Logger.log('block: %s', XmlService.getPrettyFormat().format(block));
-
-    // set cell background color
-    if (cell && !noBackground) {
-        var rootStyle = root.getAttribute('style');
-        var rootAttrs = extendFromStyle({}, rootStyle);
-        var rootBgc = rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
-        if (rootBgc) {
-            rootBgc = colorToHex(rootBgc);
-            cell.setBackgroundColor(rootBgc);
-        }
-    }
-
+function insertHtmlAsText(element, root, index, noBackground) {
     var baseAttrs = {};
     baseAttrs[DocumentApp.Attribute.FONT_FAMILY] = constants.document.font;
+
     // disable font style attrs so they don't carry over to new elements
-    [
-        DocumentApp.Attribute.BOLD,
-        DocumentApp.Attribute.ITALIC,
-        DocumentApp.Attribute.UNDERLINE,
-        DocumentApp.Attribute.STRIKETHROUGH
-    ].forEach(function remove(attr) {
-       delete baseAttrs[attr];
-    });
+    delete baseAttrs[DocumentApp.Attribute.BOLD];
+    delete baseAttrs[DocumentApp.Attribute.ITALIC];
+    delete baseAttrs[DocumentApp.Attribute.UNDERLINE];
+    delete baseAttrs[DocumentApp.Attribute.STRIKETHROUGH];
+
+    var textToAppend = '';
+    var groupedAttrs = [];
 
     // insert nodes
     var children = [{
@@ -190,8 +205,12 @@ function insertHtmlAsText(element, index, html, noBackground, cell) {
 
         if (type === XmlService.ContentTypes.TEXT) {
             var str = child.node.getText();
-            var text = element.insertText(index, str);
-            text.setAttributes(child.attrs);
+            groupedAttrs.push({
+                start: textToAppend.length,
+                end: textToAppend.length + str.length - 1,
+                attrs: child.attrs
+            });
+            textToAppend += str;
         } else if (type === XmlService.ContentTypes.ELEMENT) {
             // pass new style attributes down the stack
             var e = child.node.asElement();
@@ -199,14 +218,25 @@ function insertHtmlAsText(element, index, html, noBackground, cell) {
             var childAttrs = extendFromStyle(child.attrs, style, noBackground);
 
             var newNodes = e.getAllContent();
-            newNodes.forEach(function addChild(node) {
+            for (var i = newNodes.length - 1; i >= 0; i--) {
                 children.push({
-                    node: node,
+                    node: newNodes[i],
                     attrs: childAttrs
                 });
-            });
+            }
         }
     }
+
+    // append the full text and set it's attributes in groups
+    var asText = element.editAsText();
+    asText.insertText(index, textToAppend);
+    groupedAttrs.forEach(function setAttrs(group) {
+        asText.setAttributes(
+            index + group.start,
+            index + group.end,
+            group.attrs
+        );
+    });
 }
 
 function extendFromStyle(oldAttrs, style, noBackground) {
@@ -264,35 +294,4 @@ function setDocAttr(attrs, prop, val, noBackground) {
     if (attrName) {
         attrs[attrName] = val;
     }
-}
-
-function removeElement(element) {
-    if (element.getNextSibling()) {
-        return element.removeFromParent();
-    }
-
-    if (!element.editAsText()) {
-        element.appendParagraph('');
-        return element.removeFromParent();
-    }
-
-    // Logger.log('unable to remove, clearing text instead');
-    clearText(element);
-}
-
-/**
- * Clears all text from an element iff it is a Text element.
- *
- * @param {GoogleAppsScript.Document.Element} element
- * @returns {GoogleAppsScript.Document.Text|null}
- */
-function clearText(element) {
-    if (element.editAsText) {
-        var text = element.editAsText();
-        if (text) {
-            return text.deleteText(0, text.length - 1);
-        }
-    }
-
-    return null;
 }
