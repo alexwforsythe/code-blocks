@@ -163,7 +163,7 @@ function populateUserPrefs(prefs, themes) {
         }
     }
 
-    if (prefs.noBackground.toString() === 'true') {
+    if (prefs.noBackground && prefs.noBackground.toString() === 'true') {
         $(ids.noBackground).prop('checked', true);
     }
 }
