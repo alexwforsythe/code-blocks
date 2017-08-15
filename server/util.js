@@ -17,12 +17,25 @@ function getUserPrefs() {
 }
 
 /**
+ * @param {string} language
+ * @param {theme} theme
+ * @param {noBackground} noBackground
+ */
+function setUserPrefs(language, theme, noBackground) {
+    PropertiesService.getUserProperties().setProperties({
+        language: language,
+        theme: theme,
+        noBackground: noBackground
+    });
+}
+
+/**
  * Gets the list of supported color themes, caching their CSS if necessary.
  *
  * @param {GoogleAppsScript.Cache.Cache} scriptCache
  * @returns {Array<string>} a list of all theme names
  */
-function getThemesFromCache(scriptCache) {
+function loadThemes(scriptCache) {
     var html = HtmlService.createHtmlOutputFromFile('styles.html');
     var xml = XmlService.parse(html.getContent());
     var root = xml.getRootElement();
@@ -63,7 +76,7 @@ function getThemeCss(themeName) {
     var css = getThemeCssFromCache(scriptCache, themeName);
     if (css === null) {
         // reload and cache the theme css
-        getThemesFromCache(scriptCache);
+        loadThemes(scriptCache);
 
         css = getThemeCssFromCache(scriptCache, themeName);
         if (css === null) {

@@ -1,3 +1,5 @@
+'use strict';
+
 var $ = require('jquery');
 var juice = require('juice/client');
 var hljs = require('./languages').register();
@@ -186,12 +188,12 @@ function createHighlightedBlock(text, css, language, noBackground) {
         block.addClass(language);
     }
 
-    var node = block[0];
+    const node = block[0];
     hljs.highlightBlock(node);
 
     var highlighted = block.prop('outerHTML');
     if (css) {
-        var opts = {
+        const opts = {
             applyHeightAttributes: false,
             applyWidthAttributes: false,
             inlinePseudoElements: false

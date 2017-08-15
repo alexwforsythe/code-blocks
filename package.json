@@ -3,6 +3,9 @@
   "version": "1.3.2",
   "repository": "https://github.com/alexwforsythe/code-blocks",
   "license": "MIT",
+  "config": {
+    "scriptName": "Code Blocks"
+  },
   "devDependencies": {
     "browserify": "^14.4.0",
     "clean-css-cli": "^4.1.6",
@@ -14,15 +17,15 @@
     "uglifyify": "^4.0.3"
   },
   "scripts": {
-    "clean": "rm -rf ./dist",
-    "dist:gas": ". ./tools.sh && dist_gas",
-    "dist:js": ". ./tools.sh && dist_js",
-    "dist:static": ". ./tools.sh && dist_static",
-    "dist": "npm run dist:gas && npm run dist:js && npm run dist:static",
-    "link": "cd ./dist && gas link \"Code Blocks\"",
-    "pushOnly": "cd ./dist && gas push",
-    "push:js": "npm run dist:js && npm run pushOnly",
-    "push:gas": "npm run dist:gas && npm run pushOnly",
-    "push": "npm run clean && npm run dist && npm run link && npm run pushOnly"
+    "clean": "rm -rf dist/*",
+    "build:gas": "./build.sh gas",
+    "build:js": "./build.sh js",
+    "build:static": "./build.sh static",
+    "build": "npm run build:gas && npm run build:js && npm run build:static",
+    "link": "cd dist && gas link \"${npm_package_config_scriptName}\"",
+    "pushOnly": "cd dist && gas push",
+    "push:js": "npm run build:js && npm run pushOnly",
+    "push:gas": "npm run build:gas && npm run pushOnly",
+    "push": "npm run clean && npm run build && npm run link && npm run pushOnly"
   }
 }

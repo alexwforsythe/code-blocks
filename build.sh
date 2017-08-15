@@ -2,28 +2,27 @@
 
 set -e
 
-dist_dir="./dist" && mkdir -p ${dist_dir}
+dist_dir="dist" && mkdir -p ${dist_dir}
 bundle_filename="bundle.min.js"
-bundle_file="./client/${bundle_filename}"
 
-dist_gas () {
-    cp ./server/*.js ${dist_dir}
+gas () {
+    cp server/*.js ${dist_dir}
 }
 
-dist_js () {
+js () {
     # wrap bundled js in script tags and rename as html
-    input_file="./client/sidebar.js"
+    input_file="client/sidebar.js"
     output_file="${dist_dir}/${bundle_filename}.html"
     echo "<script>" > ${output_file}
     browserify -t 'uglifyify' ${input_file} | uglifyjs >> ${output_file}
     echo "</script>" >> ${output_file}
 }
 
-dist_html () {
-    cp ./client/*.html ${dist_dir}
+html () {
+    cp client/*.html ${dist_dir}
 }
 
-dist_css () {
+css () {
     test_file="sidebar.min.css"
     output_file="${dist_dir}/styles.html"
 
@@ -45,7 +44,14 @@ dist_css () {
     echo "</html>" >> ${output_file}
 }
 
-dist_static () {
-    dist_html
-    dist_css
-}
+case "$1" in
+    "gas")    gas;;
+    "js")     js;;
+    "html")   html;;
+    "css")    css;;
+    "static") html && css;;
+    *)
+        echo "invalid command: $1"
+        exit 1
+        ;;
+esac

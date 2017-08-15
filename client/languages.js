@@ -1,3 +1,5 @@
+'use strict';
+
 var hljs = require('highlight.js/lib/highlight');
 
 /**

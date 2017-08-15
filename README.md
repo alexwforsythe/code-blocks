@@ -26,8 +26,7 @@ Settings:
 
 * `Languages & Frameworks` > `JavaScript`
     1. `JavaScript language version`: `ECMAScript 5.1`
-    2. Check `Prefer Strict mode`
-    3. `Libraries`
+    2. `Libraries`
         1. Click `Download...`
         2. Select `TypeScript community stubs`
         3. Select `google-apps-script-DefinitelyTyped`
@@ -36,7 +35,7 @@ Settings:
 ### Building
 
 ```
-$ npm run dist
+$ npm run build
 ```
 
 ### Pushing Changes

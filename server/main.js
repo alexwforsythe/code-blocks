@@ -54,7 +54,7 @@ function getThemesAndUserPrefs() {
     var scriptCache = CacheService.getScriptCache();
 
     return {
-        themes: getThemesFromCache(scriptCache),
+        themes: loadThemes(scriptCache),
         prefs: getUserPrefs()
     };
 }
@@ -83,11 +83,7 @@ function getSelectionAndThemeCssForPreview(language, theme, noBackground) {
     userCache.put(constants.cache.previewText, hashVal);
 
     // save user preferences
-    PropertiesService.getUserProperties().setProperties({
-        language: language,
-        theme: theme,
-        noBackground: noBackground
-    });
+    setUserPrefs(language, theme, noBackground);
 
     return {
         selection: selectedText,
@@ -124,7 +120,7 @@ function insertCode(html, noBackground, selection) {
  * user's selection has not changed since the last preview was rendered, or
  * gets the user-selected text and CSS for the selected theme.
  *
- * @param {string} html the preview HTML
+ * @param {string} html the preview HTML with inline CSS
  * @param {string} language
  * @param {string} theme
  * @param {boolean} noBackground
@@ -146,8 +142,13 @@ function insertCodeOrGetSelectionAndThemeCss(
     }
 
     if (arraysAreEqual(selectedTextDigest, previewTextDigest)) {
-        var oldNoBackground = UserProperties.getProperty('noBackground');
-        if (noBackground === oldNoBackground) {
+        var userPrefs = getUserPrefs();
+        var prefsChanged =
+            userPrefs.language !== language ||
+            userPrefs.theme !== theme ||
+            userPrefs.noBackground !== noBackground;
+
+        if (!prefsChanged) {
             // the selection hasn't changed since the last preview,
             // so we can insert the provided html
             insertCode(html, noBackground, selection);
@@ -156,11 +157,7 @@ function insertCodeOrGetSelectionAndThemeCss(
     }
 
     // save user preferences
-    PropertiesService.getUserProperties().setProperties({
-        language: language,
-        theme: theme,
-        noBackground: noBackground
-    });
+    setUserPrefs(language, theme, noBackground);
 
     // the selection has changed,
     // so we need to send it to the client to be highlighted
