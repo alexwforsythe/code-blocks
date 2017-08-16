@@ -197,12 +197,14 @@ function createHighlightedBlock(text, css, language, noBackground) {
 
     var highlighted = block.prop('outerHTML');
     if (css) {
-        const opts = {
+        const params = {
             applyHeightAttributes: false,
             applyWidthAttributes: false,
-            inlinePseudoElements: false
+            inlinePseudoElements: false,
+            preserveFontFaces: false,
+            preserveMediaQueries: false
         };
-        highlighted = juice.inlineContent(highlighted, css, opts);
+        highlighted = juice.inlineContent(highlighted, css, params);
     }
 
     block = $($.parseHTML(highlighted));
