@@ -145,7 +145,7 @@ function populateThemes(themes) {
 /**
  * Populates the inputs elements with user preferences from the server.
  *
- * @param {object} prefs the saved preferences
+ * @param {Object} prefs the saved preferences
  * @param {Array.<string>} themes the list of themes
  */
 function populateUserPrefs(prefs, themes) {
@@ -260,21 +260,32 @@ function showError(msg, elementId) {
  * @returns {string} the text with special characters replaced
  */
 function replaceSpecialChars(text) {
-    // todo: can be optimized?
-    return text
-        .replace(/[\u2018\u2019\u201A\uFFFD]/g, '\'')
-        .replace(/[\u201c\u201d\u201e]/g, '"')
-        .replace(/\u02C6/g, '^')
-        .replace(/\u2039/g, '<')
-        .replace(/\u203A/g, '>')
-        .replace(/\u2013/g, '-')
-        .replace(/\u2014/g, '--')
-        .replace(/\u2026/g, '...')
-        .replace(/\u00A9/g, '(c)')
-        .replace(/\u00AE/g, '(r)')
-        .replace(/\u2122/g, 'TM')
-        .replace(/\u00BC/g, '1/4')
-        .replace(/\u00BD/g, '1/2')
-        .replace(/\u00BE/g, '3/4')
-        .replace(/[\u02DC|\u00A0]/g, ' ');
+    var re = new RegExp(Object.keys(replacements).join('|'), 'g');
+    return text.replace(re, function getReplacement(match) {
+        return replacements[match];
+    });
 }
+
+const replacements = {
+    '\u2018': '\'',
+    '\u2019': '\'',
+    '\u201A': '\'',
+    '\uFFFD': '\'',
+    '\u201c': '"',
+    '\u201d': '"',
+    '\u201e': '"',
+    '\u02C6': '^',
+    '\u2039': '<',
+    '\u203A': '>',
+    '\u2013': '-',
+    '\u2014': '--',
+    '\u2026': '...',
+    '\u00A9': '(c)',
+    '\u00AE': '(r)',
+    '\u2122': 'TM',
+    '\u00BC': '1/4',
+    '\u00BD': '1/2',
+    '\u00BE': '3/4',
+    '\u02DC': ' ',
+    '\u00A0': ' '
+};
