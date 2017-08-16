@@ -9,7 +9,7 @@ var hljs = require('highlight.js/lib/highlight');
  * Each lib must be "required" explicitly (i.e. not inside a loop) for
  * browserify to recognize it as part of the dependency graph.
  *
- * @type {object}
+ * @type {Object}
  */
 const languages = {
     apache: require('highlight.js/lib/languages/apache'),

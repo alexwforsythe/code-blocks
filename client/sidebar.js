@@ -70,7 +70,11 @@ function preview() {
             element.disabled = false;
         })
         .withUserObject(this)
-        .getSelectionAndThemeCssForPreview(language, theme, noBackground);
+        .getSelectionAndThemeCssForPreview({
+            language: language,
+            theme: theme,
+            noBackground: noBackground
+        });
 }
 
 /**
@@ -107,9 +111,11 @@ function highlight() {
                 .insertCode(html, noBackground);
         })
         .withUserObject(this)
-        .insertCodeOrGetSelectionAndThemeCss(
-            html, language, theme, noBackground
-        );
+        .insertCodeOrGetSelectionAndThemeCss(html, {
+            language: language,
+            theme: theme,
+            noBackground: noBackground
+        });
 }
 
 /*

@@ -12,7 +12,7 @@
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
  *
- * @param {object} e The event parameter for a simple onOpen trigger. To
+ * @param {Object} e The event parameter for a simple onOpen trigger. To
  *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
  *     running in, inspect e.authMode.
  */
@@ -26,7 +26,7 @@ function onOpen(e) {
 /**
  * Runs when the add-on is installed.
  *
- * @param {object} e The event parameter for a simple onInstall trigger.
+ * @param {Object} e The event parameter for a simple onInstall trigger.
  */
 function onInstall(e) {
     onOpen(e);
@@ -64,26 +64,19 @@ function getThemesAndUserPrefs() {
  * Saves the user's preferences and gets the user-selected text and CSS for
  * the selected theme.
  *
- * @param {string} language
- * @param {string} theme
- * @param {boolean} noBackground
+ * @param {Object} prefs
+ * @param {string} prefs.language
+ * @param {string} prefs.theme
+ * @param {boolean} prefs.noBackground
  * @returns {{selection: string, css: string}}
  */
-function getSelectionAndThemeCssForPreview(language, theme, noBackground) {
+function getSelectionAndThemeCssForPreview(prefs) {
     var selection = getSelection();
-    var selectedText = getSelectedText(selection);
-    var css = getThemeCss(theme);
+    var selectedText = getTextFromSelection(selection);
+    var css = getThemeCss(prefs.theme);
 
-    // hash the selected text and cache it
-    var userCache = CacheService.getUserCache();
-    var hash = Utilities.computeDigest(
-        Utilities.DigestAlgorithm.MD5, selectedText
-    );
-    var hashVal = JSON.stringify(hash);
-    userCache.put(constants.cache.previewText, hashVal);
-
-    // save user preferences
-    setUserPrefs(language, theme, noBackground);
+    cacheSelection(selectedText);
+    saveUserPrefs(prefs);
 
     return {
         selection: selectedText,
@@ -100,7 +93,7 @@ function getSelectionAndThemeCssForPreview(language, theme, noBackground) {
  *
  * @param {string} html the HTML to replace the current selection with
  * @param {boolean} noBackground
- * @param {GoogleAppsScript.Document.Range|undefined} selection
+ * @param {GoogleAppsScript.Document.Range} [selection]
  */
 function insertCode(html, noBackground, selection) {
     if (!selection) {
@@ -121,50 +114,28 @@ function insertCode(html, noBackground, selection) {
  * gets the user-selected text and CSS for the selected theme.
  *
  * @param {string} html the preview HTML with inline CSS
- * @param {string} language
- * @param {string} theme
- * @param {boolean} noBackground
- * @returns {{css: string, selection: string}|undefined}
+ * @param {Object} prefs
+ * @param {string} prefs.language
+ * @param {string} prefs.theme
+ * @param {boolean} prefs.noBackground
+ * @returns {{selection: string, css: string}|undefined}
  */
-function insertCodeOrGetSelectionAndThemeCss(
-    html, language, theme, noBackground
-) {
+function insertCodeOrGetSelectionAndThemeCss(html, prefs) {
     var selection = getSelection();
+    var selectedText = getTextFromSelection(selection);
 
-    var userCache = CacheService.getUserCache();
-    var previewTextDigest = userCache.get(constants.cache.previewText);
-    previewTextDigest = JSON.parse(previewTextDigest);
-    if (previewTextDigest) {
-        var selectedText = getSelectedText(selection);
-        var selectedTextDigest = Utilities.computeDigest(
-            Utilities.DigestAlgorithm.MD5, selectedText
-        );
+    if (alreadySelected(selectedText) && alreadySaved(prefs)) {
+        // the selection hasn't changed since the last preview,
+        // so we can insert the provided html
+        insertCode(html, prefs.noBackground, selection);
+    } else {
+        saveUserPrefs(prefs);
+
+        return {
+            selection: selectedText,
+            css: getThemeCss(prefs.theme)
+        };
     }
-
-    if (arraysAreEqual(selectedTextDigest, previewTextDigest)) {
-        var userPrefs = getUserPrefs();
-        var prefsChanged =
-            userPrefs.language !== language ||
-            userPrefs.theme !== theme ||
-            userPrefs.noBackground !== noBackground;
-
-        if (!prefsChanged) {
-            // the selection hasn't changed since the last preview,
-            // so we can insert the provided html
-            insertCode(html, noBackground, selection);
-            return;
-        }
-    }
-
-    // save user preferences
-    setUserPrefs(language, theme, noBackground);
-
-    // the selection has changed,
-    // so we need to send it to the client to be highlighted
-    return {
-        selection: getSelectedText(selection),
-        css: getThemeCss(theme)
-    };
 }
 
 // noinspection JSUnusedGlobalSymbols

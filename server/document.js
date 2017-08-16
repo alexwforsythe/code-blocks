@@ -18,7 +18,7 @@ function getSelection() {
  * @param {GoogleAppsScript.Document.Range} selection
  * @return {string} the selected text
  */
-function getSelectedText(selection) {
+function getTextFromSelection(selection) {
     var elements = selection.getSelectedElements();
     try {
         var result = elements.map(function (e) {
@@ -262,7 +262,7 @@ function extendFromStyle(oldAttrs, style, noBackground) {
 /**
  * Sets an element's Document.Attribute based on the given CSS property.
  *
- * @param {object} attrs
+ * @param {Object} attrs
  * @param {string} prop
  * @param {string} val
  * @param {boolean} noBackground

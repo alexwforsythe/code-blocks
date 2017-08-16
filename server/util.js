@@ -1,5 +1,8 @@
 /**
- * @returns {object} The user's preferences, if they exist.
+ * @returns {Object} The user's preferences, if they exist.
+ */
+/**
+ * @returns {Object} the users's preferences
  */
 function getUserPrefs() {
     try {
@@ -12,28 +15,73 @@ function getUserPrefs() {
     return {
         language: userProps.language,
         theme: userProps.theme,
-        noBackground: userProps.noBackground
+        noBackground: userProps.noBackground === 'true'
     }
 }
 
 /**
- * @param {string} language
- * @param {theme} theme
- * @param {noBackground} noBackground
+ * @param {Object} prefs
+ * @param {string} prefs.language
+ * @param {string} prefs.theme
+ * @param {boolean} prefs.noBackground
  */
-function setUserPrefs(language, theme, noBackground) {
-    PropertiesService.getUserProperties().setProperties({
-        language: language,
-        theme: theme,
-        noBackground: noBackground
-    });
+function saveUserPrefs(prefs) {
+    PropertiesService.getUserProperties().setProperties(prefs);
+}
+
+/**
+ * todo: doc
+ *
+ * @param {Object} prefs
+ * @param {string} prefs.language
+ * @param {string} prefs.theme
+ * @param {boolean} prefs.noBackground
+ * @returns {boolean}
+ */
+function alreadySaved(prefs) {
+    var userPrefs = getUserPrefs();
+    return prefs.language === userPrefs.language &&
+        prefs.theme === userPrefs.theme &&
+        prefs.noBackground === userPrefs.noBackground;
+}
+
+/**
+ * todo: doc
+ *
+ * @param {string} selectedText
+ * @returns {boolean}
+ */
+function alreadySelected(selectedText) {
+    var userCache = CacheService.getUserCache();
+    var previewTextDigest = userCache.get(constants.cache.previewText);
+    previewTextDigest = JSON.parse(previewTextDigest);
+    if (previewTextDigest) {
+        var selectedTextDigest = Utilities.computeDigest(
+            Utilities.DigestAlgorithm.MD5, selectedText
+        );
+    }
+    return arraysAreEqual(selectedTextDigest, previewTextDigest);
+}
+
+/**
+ * todo: doc
+ *
+ * @param {string} selectedText
+ */
+function cacheSelection(selectedText) {
+    var userCache = CacheService.getUserCache();
+    var hash = Utilities.computeDigest(
+        Utilities.DigestAlgorithm.MD5, selectedText
+    );
+    var hashVal = JSON.stringify(hash);
+    userCache.put(constants.cache.previewText, hashVal);
 }
 
 /**
  * Gets the list of supported color themes, caching their CSS if necessary.
  *
  * @param {GoogleAppsScript.Cache.Cache} scriptCache
- * @returns {Array<string>} a list of all theme names
+ * @returns {Array.<string>} a list of all theme names
  */
 function loadThemes(scriptCache) {
     var html = HtmlService.createHtmlOutputFromFile('styles.html');
@@ -113,8 +161,8 @@ function cloneObj(obj) {
 }
 
 /**
- * @param {Array<*>} lhs
- * @param {Array<*>} rhs
+ * @param {*} lhs
+ * @param {*} rhs
  * @returns {boolean}
  */
 function arraysAreEqual(lhs, rhs) {
