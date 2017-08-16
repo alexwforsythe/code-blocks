@@ -124,7 +124,6 @@ function populateLanguages() {
     languageSelect.append(languages.map(function toOption(language) {
         return '<option value="' + language + '">' + language + '</option>';
     }));
-    languageSelect.hide().show(0);
 }
 
 /**
@@ -135,7 +134,6 @@ function populateThemes(themes) {
     themeSelect.append(themes.map(function toOption(theme) {
         return '<option value="' + theme + '">' + theme + '</option>';
     }));
-    themeSelect.hide().show(0);
 }
 
 /**
