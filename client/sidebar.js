@@ -14,8 +14,8 @@ const ids = {
     themes: '#themes',
     noBackground: '#no-background',
     preview: '#preview',
-    highlightButtons: '#highlight-buttons',
-    highlight: '#highlight-selection',
+    formatButtons: '#format-buttons',
+    format: '#format-selection',
     showPreview: '#show-preview',
     error: '#error'
 };
@@ -33,7 +33,7 @@ $(function () {
             populateThemes(result.themes);
             populateUserPrefs(result.prefs, result.themes);
 
-            $(ids.highlight).click(highlight);
+            $(ids.format).click(format);
             $(ids.showPreview).click(preview);
 
             enableUiElements();
@@ -42,7 +42,7 @@ $(function () {
 });
 
 /**
- * Runs a server-side function to highlight the user-selected text and update
+ * Runs a server-side function to format the user-selected text and update
  * the sidebar UI with the resulting block.
  */
 function preview() {
@@ -78,10 +78,10 @@ function preview() {
 }
 
 /**
- * Runs a server-side function to highlight the user-selected text and replaces
+ * Runs a server-side function to format the user-selected text and replaces
  * that text in the active document with the resulting block.
  */
-function highlight() {
+function format() {
     // noinspection JSUnusedGlobalSymbols
     this.disabled = true;
     $(ids.error).remove();
@@ -219,7 +219,7 @@ function enableUiElements() {
     [
         ids.language,
         ids.theme,
-        ids.highlight,
+        ids.format,
         ids.showPreview
     ].forEach(function enable(id) {
         $(id).prop('disabled', false);
@@ -241,7 +241,7 @@ function showErrorThemes(msg, element) {
 }
 
 function showErrorButtons(msg, element) {
-    showError(msg, $(ids.highlightButtons));
+    showError(msg, $(ids.formatButtons));
     element.disabled = false;
 }
 
