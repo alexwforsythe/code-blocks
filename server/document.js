@@ -172,7 +172,7 @@ function appendTableWithHtml(element, root, noBackground) {
 }
 
 /**
- * Parses an HTML block as XML and inserts all of it's children into the
+ * Parses an HTML block as XML and inserts all of its children into the
  * document, respecting the 'style' attribute when possible. Each child node
  * inherits style properties from its parent.
  *
@@ -227,7 +227,7 @@ function insertHtmlAsText(element, root, index, noBackground) {
         }
     }
 
-    // append the full text and set it's attributes in groups
+    // append the full text and set its attributes in groups
     var asText = element.editAsText();
     asText.insertText(index, textToAppend);
     groupedAttrs.forEach(function setAttrs(group) {
