@@ -26,6 +26,7 @@
     "pushOnly": "cd dist && gas push",
     "push:js": "npm run build:js && npm run pushOnly",
     "push:gas": "npm run build:gas && npm run pushOnly",
-    "push": "npm run clean && npm run build && npm run link && npm run pushOnly"
+    "prepush": "npm run clean && npm run build && npm run link",
+    "push": "npm run pushOnly"
   }
 }

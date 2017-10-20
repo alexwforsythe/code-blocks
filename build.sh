@@ -2,8 +2,8 @@
 
 set -e
 
-dist_dir="dist" && mkdir -p ${dist_dir}
-bundle_filename="bundle.min.js"
+dist_dir="dist"
+mkdir -p ${dist_dir}
 
 gas () {
     cp server/*.js ${dist_dir}
@@ -12,7 +12,7 @@ gas () {
 js () {
     # wrap bundled js in script tags and rename as html
     input_file="client/sidebar.js"
-    output_file="${dist_dir}/${bundle_filename}.html"
+    output_file="${dist_dir}/bundle.min.js.html"
     echo "<script>" > ${output_file}
     browserify -t 'uglifyify' ${input_file} | uglifyjs >> ${output_file}
     echo "</script>" >> ${output_file}
