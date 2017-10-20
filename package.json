@@ -6,6 +6,9 @@
   "config": {
     "scriptName": "Code Blocks"
   },
+  "engines": {
+    "node": ">=4.2.0"
+  },
   "devDependencies": {
     "browserify": "^14.4.0",
     "clean-css-cli": "^4.1.6",
