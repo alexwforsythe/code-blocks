@@ -12,6 +12,7 @@ var hljs = require('highlight.js/lib/highlight');
  * @type {Object}
  */
 const languages = {
+    actionscript: require('highlight.js/lib/languages/actionscript'),
     apache: require('highlight.js/lib/languages/apache'),
     autohotkey: require('highlight.js/lib/languages/autohotkey'),
     bash: require('highlight.js/lib/languages/bash'),
@@ -41,6 +42,7 @@ const languages = {
     python: require('highlight.js/lib/languages/python'),
     r: require('highlight.js/lib/languages/r'),
     ruby: require('highlight.js/lib/languages/ruby'),
+    rust: require('highlight.js/lib/languages/rust'),
     scala: require('highlight.js/lib/languages/scala'),
     sql: require('highlight.js/lib/languages/sql'),
     shell: require('highlight.js/lib/languages/shell'),
