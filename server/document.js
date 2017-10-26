@@ -1,17 +1,42 @@
 /**
- * Gets the user's current selection if it exists or throws an error otherwise.
+ * Gets the user's current selection if it exists. If there is no selection
+ * but the cursor is in a table cell, sets the user's selection to the entire
+ * cell and returns it. Otherwise, throws an error.
  *
  * @returns {GoogleAppsScript.Document.Range}
  */
 function getSelection() {
     var selection = DocumentApp.getActiveDocument().getSelection();
-    if (!selection) {
+
+    if (selection) {
+        // highlighting multiple cells is not supported
+        if (hasMultipleCells(selection)) {
+            throw constants.errors.multipleBlocks;
+        }
+        return selection;
+    }
+
+    // if the cursor is already in a cell, just select it for the user
+    var document = DocumentApp.getActiveDocument();
+    var container = document
+        .getCursor()
+        .getElement()
+        .getParent();
+
+    if (!isCell(container)) {
+        container = container.getParent();
+    }
+    if (!isCell(container)) {
         throw constants.errors.selectText;
     }
-    // highlighting multiple cells is not supported
-    if (hasMultipleCells(selection)) {
-        throw constants.errors.multipleBlocks;
-    }
+
+    selection = document
+        .newRange()
+        .addElement(container)
+        .build();
+
+    document.setSelection(selection);
+
     return selection;
 }
 
