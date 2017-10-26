@@ -9,7 +9,8 @@ var constants = {
         getUserPreferences: 'Couldn\'t get user preferences.',
         selectText: 'Please select some text.',
         themeNotFound: 'Couldn\'t get theme.',
-        getSelection: 'Couldn\'t get selection.'
+        getSelection: 'Couldn\'t get selection.',
+        multipleBlocks: 'Can\'t format multiple blocks.'
     },
     themes: {
         base: 'default'

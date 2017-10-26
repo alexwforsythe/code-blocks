@@ -8,6 +8,10 @@ function getSelection() {
     if (!selection) {
         throw constants.errors.selectText;
     }
+    // highlighting multiple cells is not supported
+    if (hasMultipleCells(selection)) {
+        throw constants.errors.multipleBlocks;
+    }
     return selection;
 }
 
@@ -19,7 +23,7 @@ function getSelection() {
  * @return {string} the selected text
  */
 function getTextFromSelection(selection) {
-    var elements = selection.getSelectedElements();
+    var elements = selection.getRangeElements();
     try {
         var result = elements.map(function (e) {
             var element = e.getElement();
@@ -53,6 +57,9 @@ function getTextFromSelection(selection) {
  * @param {boolean} noBackground
  */
 function replaceSelection(selection, html, noBackground) {
+    var document = DocumentApp.getActiveDocument();
+    var body = document.getBody();
+
     var block = XmlService.parse(html);
     var root = block.getRootElement();
 
@@ -92,8 +99,7 @@ function replaceSelection(selection, html, noBackground) {
 
                     // append to parent: before, table, after
                     parent.appendText(copyBefore);
-                    var table = appendTableWithHtml(parent, root, noBackground);
-                    var body = DocumentApp.getActiveDocument().getBody();
+                    var table = insertHtmlAsCell(parent, root, noBackground);
                     var index = body.getChildIndex(table);
                     var par = body.insertParagraph(index + 1, '');
                     par.appendText(copyAfter);
@@ -103,14 +109,13 @@ function replaceSelection(selection, html, noBackground) {
                 // e.g. selection is full line with empty line above or below
                 if (!after && beforeEndsWithCr) {
                     if (!replaced) {
-                        appendTableWithHtml(parent, root, noBackground);
+                        insertHtmlAsCell(parent, root, noBackground);
                         replaced = true;
                     }
                 } else if (!before && afterStartsWithCr) {
                     if (!replaced) {
-                        var nextContainer =
-                            element.getParent().getPreviousSibling();
-                        appendTableWithHtml(nextContainer, root, noBackground);
+                        var nextContainer = parent.getPreviousSibling();
+                        insertHtmlAsCell(nextContainer, root, noBackground);
                         replaced = true;
                     }
                 }
@@ -123,34 +128,55 @@ function replaceSelection(selection, html, noBackground) {
                 }
             } else if (!replaced) {
                 // e.g. selection is line with empty lines above and below
-                appendTableWithHtml(parent, root, noBackground);
-                parent.removeFromParent();
+                insertHtmlAsCell(parent, root, noBackground);
+                try {
+                    var parentIndex = document.getBody().getChildIndex(parent);
+                    if (parentIndex && !isCell(element) && !isCell(parent)) {
+                        parent.removeFromParent();
+                    }
+                } catch (e) {
+                    // ignore: paragraph was already removed from table cell
+                }
                 replaced = true;
             }
         } else {
             // e.g. selection is full container element
             if (!replaced) {
-                appendTableWithHtml(element, root, noBackground);
+                insertHtmlAsCell(element, root, noBackground);
+                if (!isCell(element)) {
+                    element.removeFromParent();
+                }
                 replaced = true;
+            } else {
+                element.removeFromParent();
             }
-            element.removeFromParent();
         }
     }
 }
 
-function appendTableWithHtml(element, root, noBackground) {
-    var body = DocumentApp.getActiveDocument().getBody();
+function insertHtmlAsCell(element, root, noBackground) {
+    var cell;
+    if (element.getType() === DocumentApp.ElementType.TABLE_CELL) {
+        element.clear();
+        cell = element;
+    } else {
+        var parent = element.getParent();
+        if (parent.getType() === DocumentApp.ElementType.TABLE_CELL) {
+            parent.clear();
+            cell = parent;
+        } else {
+            // insert table
+            var body = DocumentApp.getActiveDocument().getBody();
+            var index = body.getChildIndex(element);
+            var table = body.insertTable(index + 1);
 
-    // insert table
-    var index = body.getChildIndex(element);
-    var table = body.insertTable(index + 1);
+            // remove border
+            table.setBorderWidth(0);
 
-    // remove border
-    table.setBorderWidth(0);
-
-    // append cell with paragraph
-    var cell = table.appendTableRow().appendTableCell();
-    var par = cell.appendParagraph('');
+            // append cell with paragraph
+            cell = table.appendTableRow().appendTableCell();
+        }
+    }
 
     // set cell background color
     if (!noBackground) {
@@ -163,6 +189,7 @@ function appendTableWithHtml(element, root, noBackground) {
         }
     }
 
+    var par = cell.appendParagraph('');
     insertHtmlAsText(par, root, 0, noBackground);
 
     // clean up cell (remove initial paragraph)
@@ -294,4 +321,41 @@ function setDocAttr(attrs, prop, val, noBackground) {
     if (attrName) {
         attrs[attrName] = val;
     }
+}
+
+/**
+ * @param {GoogleAppsScript.Document.Range} range
+ * @returns {boolean} whether the range contains multiple table cells
+ */
+function hasMultipleCells(range) {
+    var ranges = range.getRangeElements();
+    var numCells = ranges.filter(hasCell).length;
+    return ranges.some(hasTable) || numCells > 1;
+}
+
+/**
+ * @param {GoogleAppsScript.Document.RangeElement} rangeElement
+ * @returns {boolean} whether rangeElement contains a table
+ */
+function hasTable(rangeElement) {
+    var element = rangeElement.getElement();
+    return element.getType() === DocumentApp.ElementType.TABLE;
+}
+
+/**
+ * @param {GoogleAppsScript.Document.RangeElement} rangeElement
+ * @returns {boolean} whether rangeElement contains a table cell
+ */
+function hasCell(rangeElement) {
+    var element = rangeElement.getElement();
+    return isCell(element);
+}
+
+/**
+ * @param {GoogleAppsScript.Document.Element|
+ * GoogleAppsScript.Document.ContainerElement} element
+ * @returns {boolean} whether element is a table cell
+ */
+function isCell(element) {
+    return element.getType() === DocumentApp.ElementType.TABLE_CELL;
 }

@@ -88,7 +88,7 @@ function getSelectionAndThemeCssForPreview(prefs) {
 /**
  * Replaces the text of the current selection with the provided block, or
  * throws an error if there is no selection. If multiple elements are selected,
- * only inserts the block in the first element that can contain text and
+ * only inserts the block in the last element that can contain text and
  * removes the other elements.
  *
  * @param {string} html the HTML to replace the current selection with
