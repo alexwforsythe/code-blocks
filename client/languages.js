@@ -38,6 +38,7 @@ const languages = {
     objectivec: require('highlight.js/lib/languages/objectivec'),
     perl: require('highlight.js/lib/languages/perl'),
     php: require('highlight.js/lib/languages/php'),
+    processing: require('highlight.js/lib/languages/processing'),
     powershell: require('highlight.js/lib/languages/powershell'),
     python: require('highlight.js/lib/languages/python'),
     r: require('highlight.js/lib/languages/r'),
