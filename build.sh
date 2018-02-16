@@ -6,6 +6,7 @@ dist_dir="dist"
 mkdir -p ${dist_dir}
 
 gas () {
+    cp appsscript.json ${dist_dir}
     cp server/*.js ${dist_dir}
 }
 
