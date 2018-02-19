@@ -16,6 +16,8 @@ const languages = {
     apache: require('highlight.js/lib/languages/apache'),
     autohotkey: require('highlight.js/lib/languages/autohotkey'),
     bash: require('highlight.js/lib/languages/bash'),
+    clojure: require('highlight.js/lib/languages/clojure'),
+    clojurerepl: require('highlight.js/lib/languages/clojure-repl'),
     coffeescript: require('highlight.js/lib/languages/coffeescript'),
     cpp: require('highlight.js/lib/languages/cpp'),
     arduino: require('highlight.js/lib/languages/arduino'), // depends on cpp
