@@ -59,6 +59,8 @@ const languages = {
     swift: require('highlight.js/lib/languages/swift'),
     thrift: require('highlight.js/lib/languages/thrift'),
     typescript: require('highlight.js/lib/languages/typescript'),
+    verilog: require('highlight.js/lib/languages/verilog'),
+    vhdl: require('highlight.js/lib/languages/vhdl'),
     x86asm: require('highlight.js/lib/languages/x86asm'),
     xml: require('highlight.js/lib/languages/xml'),
     yaml: require('highlight.js/lib/languages/yaml')
