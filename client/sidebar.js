@@ -1,12 +1,11 @@
 'use strict';
 
 var $ = require('jquery');
+var hljs = require('highlight.js');
 var juice = require('juice/client');
-var hljs = require('./languages').register();
 
 const defaultBgc = '#f0f0f0';
 const languageAuto = 'Auto';
-const languages = hljs.listLanguages().sort();
 
 const ids = {
     language: '#language',
@@ -25,13 +24,15 @@ const ids = {
  * preferences if previously set, and assign click handlers to each button.
  */
 $(function () {
-    populateLanguages();
+    const languages = hljs.listLanguages().sort();
+
+    loadLanguages(languages);
 
     google.script.run
         .withFailureHandler(showErrorThemes)
         .withSuccessHandler(function onSuccess(result) {
-            populateThemes(result.themes);
-            populateUserPrefs(result.prefs, result.themes);
+            loadThemes(result.themes);
+            loadUserPrefs(languages, result.themes, result.prefs);
 
             $(ids.format).click(format);
             $(ids.showPreview).click(preview);
@@ -123,32 +124,41 @@ function format() {
  */
 
 /**
- * Populate the language input options.
+ * Loads the language input options.
  */
-function populateLanguages() {
+function loadLanguages(languages) {
     const languageSelect = $(ids.language);
-    languageSelect.append(languages.map(function toOption(language) {
-        return '<option value="' + language + '">' + language + '</option>';
-    }));
+    var languageOptions = languages.map(toOption);
+
+    languageSelect.append(languageOptions);
 }
 
 /**
- * Populates the theme input options.
+ * Loads the theme input options.
  */
-function populateThemes(themes) {
+function loadThemes(themes) {
     const themeSelect = $(ids.theme);
-    themeSelect.append(themes.map(function toOption(theme) {
-        return '<option value="' + theme + '">' + theme + '</option>';
-    }));
+
+    themeSelect.append(themes.map(toOption));
 }
 
 /**
- * Populates the inputs elements with user preferences from the server.
+ * Returns the given value in the form of an HTML option element.
+ *
+ * @param {string} value
+ * @returns {string} option element
+ */
+function toOption(value) {
+    return '<option value="' + value + '">' + value + '</option>';
+}
+
+/**
+ * Loads the inputs elements with user preferences from the server.
  *
  * @param {Object} prefs the saved preferences
  * @param {Array.<string>} themes the list of themes
  */
-function populateUserPrefs(prefs, themes) {
+function loadUserPrefs(languages, themes, prefs) {
     if (prefs.language) {
         const language = $(ids.language);
         const selectionIsValid = languages.some(function matchesPref(l) {
