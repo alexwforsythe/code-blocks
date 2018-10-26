@@ -24,7 +24,12 @@ const ids = {
  * preferences if previously set, and assign click handlers to each button.
  */
 $(function () {
-    const languages = hljs.listLanguages().sort();
+    const languages = hljs.listLanguages();
+
+    // add html explicitly for users who don't realize that xml will work;
+    // html is an alias for xml in highlight.js
+    languages.push('html');
+    languages.sort();
 
     loadLanguages(languages);
 
