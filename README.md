@@ -20,6 +20,10 @@ Otherwise, please refer to their page on requesting new languages, found
 $ npm install
 ```
 
+#### VS Code
+
+You're good to go.
+
 #### Webstorm
 
 Settings:
