@@ -24,7 +24,6 @@ html () {
 }
 
 css () {
-    test_file="sidebar.min.css"
     output_file="${dist_dir}/styles.html"
 
     optimizations="optimizeBackground:off;"
