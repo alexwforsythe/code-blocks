@@ -1,18 +1,12 @@
-# Code Blocks
+# Reddit code-blocks
 
-[Code Blocks](https://chrome.google.com/webstore/detail/code-blocks/ebieibfdjgmmimpldgengceekpfefmfd) is a syntax highlighter add-on for Google Docs.
+[Reddit code-blocks](https://chrome.google.com/webstore/detail/code-blocks/ebieibfdjgmmimpldgengceekpfefmfd) is a syntax highlighter add-on for Google Docs.
 
-#### A quick note on requesting new languages:
-
-Code Blocks is powered by [highlight.js](https://highlightjs.org/) and
-can only provide syntax highlighting for languages that it supports. If
-you would like Code Blocks to add support for a language that is
-implemented by highlight.js, feel free to submit a request via the
-[issue tracker](https://github.com/alexwforsythe/code-blocks/issues/new).
-Otherwise, please refer to their page on requesting new languages, found
-[here](http://highlightjs.readthedocs.io/en/latest/language-requests.html).
+This is a fork of the original [code-blocks repository](https://github.com/alexwforsythe/code-blocks).
 
 ## Contributing
+
+Most of the relevant source code is stored in the [client](client) and [server](server) folders.
 
 ### Setup
 
@@ -20,42 +14,16 @@ Otherwise, please refer to their page on requesting new languages, found
 $ npm install
 ```
 
-#### VS Code
-
-You're good to go.
-
-#### Webstorm
-
-Settings:
-
-* `Languages & Frameworks` > `JavaScript`
-    1. `JavaScript language version`: `ECMAScript 5.1`
-    2. `Libraries`
-        1. Click `Download...`
-        2. Select `TypeScript community stubs`
-        3. Select `google-apps-script-DefinitelyTyped`
-        4. Click `Download and Install`
-
 ### Building
 
 ```
 $ npm run build
 ```
 
-### Pushing Changes
+The output files for the Reddit code-blocks Google Cloud Project generated within the "dist" folder.  
 
-**NOTE:** The following command only works for the project maintainer,
-because it requires the user to be authenticated via Google Drive.
+## Reddit Code Blocks Project
 
-| Command | Description |
-| --- | --- |
-| npm run push:gas | just GAS files |
-| npm run push:js | just `sidebar.js` |
-| npm run push:static | just HTML & CSS |
-| npm run push | everything |
-
-## Resources
-
-* https://developers.google.com/apps-script/guides/support/best-practices
-* https://gsuite-developers.googleblog.com/2015/12/advanced-development-process-with-apps.html
-* http://googleappsscript.blogspot.com/2010/06/optimizing-spreadsheet-operations.html
+The Reddit code-blocks Project can be found [here](https://script.google.com/a/reddit.com/d/1H2SNcTnoeopnsewHXYPIa2GDWEg0EJcpNGTRMT41ruoPwpSAXcPqLRV9/).  
+The .gs and .html files that are created during the build process within the "dist" folder can be copied to the
+Reddit code-blocks Google Cloud Project by one of the project maintainers.
