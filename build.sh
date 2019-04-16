@@ -10,13 +10,18 @@ gas () {
     cp server/*.js ${dist_dir}
 }
 
-js () {
+js_to_gs () {
     # wrap bundled js in script tags and rename as html
     input_file="client/sidebar.js"
     output_file="${dist_dir}/bundle.min.js.html"
     echo "<script>" > ${output_file}
     browserify -t 'uglifyify' ${input_file} | uglifyjs >> ${output_file}
     echo "</script>" >> ${output_file}
+
+    # Rename all *.js to *.gs
+    for f in ${dist_dir}/*.js; do
+        mv -- "$f" "${f%.js}.gs"
+    done
 }
 
 html () {
@@ -46,7 +51,7 @@ css () {
 
 case "$1" in
     "gas")    gas;;
-    "js")     js;;
+    "js")     js_to_gs;;
     "html")   html;;
     "css")    css;;
     "static") html && css;;
