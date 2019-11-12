@@ -7,15 +7,15 @@
     "node": ">=4.2.0"
   },
   "devDependencies": {
-    "@google/clasp": "1.6.3",
+    "@google/clasp": "2.3.0",
     "@types/google-apps-script": "1.0.2",
-    "browserify": "16.2.3",
-    "clean-css-cli": "4.2.1",
-    "highlight.js": "9.13.1",
-    "jquery": "3.3.1",
-    "juice": "5.0.0",
+    "browserify": "16.5.0",
+    "clean-css-cli": "4.3.0",
+    "highlight.js": "9.16.2",
+    "jquery": "3.4.1",
+    "juice": "5.2.0",
     "uglify-es": "3.3.9",
-    "uglifyify": "5.0.1"
+    "uglifyify": "5.0.2"
   },
   "scripts": {
     "clean": "rm -rf dist/*",
