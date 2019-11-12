@@ -59,3 +59,7 @@ because it requires the user to be authenticated via Google Drive.
 * https://developers.google.com/apps-script/guides/support/best-practices
 * https://gsuite-developers.googleblog.com/2015/12/advanced-development-process-with-apps.html
 * http://googleappsscript.blogspot.com/2010/06/optimizing-spreadsheet-operations.html
+
+## [Privacy Policy](https://www.alexwforsythe.com/code-blocks/privacy-policy)
+
+## [Terms of Service](https://www.alexwforsythe.com/code-blocks/terms-of-service)
