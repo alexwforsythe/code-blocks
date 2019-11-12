@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@google/clasp": "1.6.3",
+    "@types/google-apps-script": "1.0.2",
     "browserify": "16.2.3",
     "clean-css-cli": "4.2.1",
     "highlight.js": "9.13.1",
