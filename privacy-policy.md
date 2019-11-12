@@ -14,3 +14,7 @@ You are free to refuse our request for your personal information, with the under
 
 Your continued use of our website will be regarded as acceptance of our practices around privacy and personal information. If you have any questions about how we handle user data and personal information, feel free to contact us.
 This policy is effective as of 28 October 2019.
+
+---
+
+[Homepage](https://www.alexwforsythe.com/code-blocks/) | [G Suite Marketplace](https://chrome.google.com/webstore/detail/code-blocks/ebieibfdjgmmimpldgengceekpfefmfd) | [Privacy Policy](https://www.alexwforsythe.com/code-blocks/privacy-policy) | [Terms of Service](https://www.alexwforsythe.com/code-blocks/terms-of-service)
