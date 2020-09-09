@@ -44,13 +44,20 @@ right-click the table and select **Delete table**.
 
 ## Limitations
 
-### New language support
+### Updates to syntax highlighting
 
 Code Blocks is built with [highlight.js](https://highlightjs.org/) and can only
 provide syntax highlighting for languages that are supported by that library.
+
 If you'd like to see Code Blocks support a language that is not yet implemented
-by highlight.js, please refer to their page on requesting new languages, found
-[here](http://highlightjs.readthedocs.io/en/latest/language-requests.html).
+by highlight.js, please refer to [their page on requesting new languages](http://highlightjs.readthedocs.io/en/latest/language-requests.html).
+
+If you'd like to see Code Blocks update or fix support for an existing language:
+1. Check if the [latest version of highlight.js](https://github.com/highlightjs/highlight.js/releases)
+already includes the update. If it does, submit a PR to this repository that
+bumps the highlight.js version in [`package.json`](https://github.com/alexwforsythe/code-blocks/blob/master/package.json).
+2. If highlight.js does not yet include the update, please submit an issue on
+[their issue tracker](https://github.com/highlightjs/highlight.js/issues).
 
 ### Real-time syntax highlighting
 
