@@ -6,8 +6,7 @@ By accessing our app, Code Blocks, you are agreeing to be bound by these terms o
 
 ## 2. Use License
 
-1. Permission is granted to temporarily download multiple copies of Code Blocks per device for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
-    1. use the materials for any commercial purpose, or for any public display (commercial or non-commercial);
+1. Permission is granted to temporarily download multiple copies of Code Blocks per device for personal or commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
     1. remove any copyright or other proprietary notations from the materials;
 1. This license shall automatically terminate if you violate any of these restrictions and may be terminated by Code Blocks at any time. Upon terminating your viewing of these materials or upon the termination of this license, you must destroy any downloaded materials in your possession whether in electronic or printed format.
 
