@@ -12,7 +12,7 @@
     "browserify": "16.5.0",
     "clean-css-cli": "4.3.0",
     "highlight.js": "9.16.2",
-    "jquery": "3.4.1",
+    "jquery": "3.5.0",
     "juice": "5.2.0",
     "uglify-es": "3.3.9",
     "uglifyify": "5.0.2"
