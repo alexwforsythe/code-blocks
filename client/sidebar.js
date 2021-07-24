@@ -20,6 +20,16 @@ const ids = {
 };
 
 /**
+ * Define languages that are not included in highlight.js by default
+ */
+ function defineOtherLanguages() {
+    const graphql = require("highlightjs-graphql")
+    graphql(hljs)
+}
+
+defineOtherLanguages();
+
+/**
  * On document load, try to load languages and themes, try to load the user's
  * preferences if previously set, and assign click handlers to each button.
  */
