@@ -2,6 +2,7 @@
 
 var $ = require('jquery');
 var hljs = require('highlight.js');
+var hljsDefineSolidity = require('highlightjs-solidity');
 var juice = require('juice/client');
 
 const defaultBgc = '#f0f0f0';
@@ -24,6 +25,8 @@ const ids = {
  * preferences if previously set, and assign click handlers to each button.
  */
 $(function () {
+    hljsDefineSolidity(hljs);
+    hljs.initHighlightingOnLoad();
     const languages = hljs.listLanguages();
 
     // add html explicitly for users who don't realize that xml will work;
