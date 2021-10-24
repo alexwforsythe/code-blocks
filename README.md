@@ -6,7 +6,7 @@
 
 ### Installation
 
-Code Blocks is available on the [G Suite Marketplace](https://chrome.google.com/webstore/detail/code-blocks/ebieibfdjgmmimpldgengceekpfefmfd).
+Code Blocks is available on the [G Suite Marketplace](https://workspace.google.com/marketplace/app/code_blocks/100740430168).
 Select **Install** to begin using it in Google Docs.
 
 ### Starting the add-on
