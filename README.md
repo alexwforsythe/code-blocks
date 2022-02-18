@@ -121,4 +121,4 @@ because they require Google Drive authorization.
 
 ---
 
-[Homepage](https://www.alexwforsythe.com/code-blocks/) | [G Suite Marketplace](https://chrome.google.com/webstore/detail/code-blocks/ebieibfdjgmmimpldgengceekpfefmfd) | [Privacy Policy](https://www.alexwforsythe.com/code-blocks/privacy-policy) | [Terms of Service](https://www.alexwforsythe.com/code-blocks/terms-of-service)
+[Homepage](https://www.alexwforsythe.com/code-blocks/) | [Google Workspace Marketplace](https://workspace.google.com/marketplace/app/code_blocks/100740430168) | [Privacy Policy](https://www.alexwforsythe.com/code-blocks/privacy-policy) | [Terms of Service](https://www.alexwforsythe.com/code-blocks/terms-of-service)
