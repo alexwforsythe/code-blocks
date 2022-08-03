@@ -27,7 +27,7 @@ function defineThirdPartyGrammars() {
     graphql(hljs)
 }
 
-defineOtherLanguages();
+defineThirdPartyGrammars();
 
 /**
  * On document load, try to load languages and themes, try to load the user's
