@@ -22,7 +22,7 @@ const ids = {
 /**
  * Define languages that are not included in highlight.js by default
  */
- function defineOtherLanguages() {
+function defineThirdPartyGrammars() {
     const graphql = require("highlightjs-graphql")
     graphql(hljs)
 }
