@@ -11,7 +11,7 @@
     "@types/google-apps-script": "1.0.2",
     "browserify": "16.5.0",
     "clean-css-cli": "4.3.0",
-    "highlight.js": "9.16.2",
+    "highlight.js": "10.4.1",
     "highlightjs-graphql": "^1.0.2",
     "jquery": "3.4.1",
     "juice": "5.2.0",
