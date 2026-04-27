@@ -4,7 +4,7 @@ layout: home
 permalink: /
 ---
 
-![img](https://repository-images.githubusercontent.com/68638466/d3069380-02d3-11ea-8d09-bb881c87c125)
+![promo-image](assets/images/code-blocks-promo-marquee.gif)
 
 [![clasp](https://img.shields.io/badge/built%20with-clasp-4285f4.svg)](https://github.com/google/clasp) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/alexwforsythe)
 
@@ -16,19 +16,19 @@ permalink: /
 
 ### Starting the add-on
 
-![starting](https://user-images.githubusercontent.com/1639061/68648430-3b709300-04d5-11ea-912f-2e767f37db56.gif)
+![starting](assets/images/code-blocks-format-block.gif)
 
 ### Formatting inline code
 
-![inline-formatting](https://user-images.githubusercontent.com/1639061/68643446-48d25100-04c6-11ea-96e8-090333e95559.gif)
+![inline-formatting](assets/images/code-blocks-format-inline.gif)
 
 ### Formatting code blocks
 
-![blocks-formatting](https://user-images.githubusercontent.com/1639061/68649759-51338780-04d8-11ea-9e39-5793dec16a4e.gif)
+![blocks-formatting](assets/images/code-blocks-format-block.gif)
 
 ### Reformatting code blocks
 
-![reformatting-blocks](https://user-images.githubusercontent.com/1639061/68648457-4297a100-04d5-11ea-9787-6e9ecbedfdc1.gif)
+![reformatting-blocks](assets/images/code-blocks-reformat-block.gif)
 
 ### Previewing themes
 
