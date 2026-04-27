@@ -10,7 +10,7 @@ By accessing our app, Code Blocks, you are agreeing to be bound by these terms o
     1. remove any copyright or other proprietary notations from the materials;
 1. This license shall automatically terminate if you violate any of these restrictions and may be terminated by Code Blocks at any time. Upon terminating your viewing of these materials or upon the termination of this license, you must destroy any downloaded materials in your possession whether in electronic or printed format.
 
-## 1. Disclaimer
+## 3. Disclaimer
 
 1. The materials within Code Blocks are provided on an 'as is' basis. Code Blocks makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
 
