@@ -7,7 +7,7 @@ permalink: pretty
 # Minima
 remote_theme: jekyll/minima
 minima:
-  skin: auto
+  skin: classic
   nav_pages:
     - privacy-policy.md
     - terms-of-service.md
