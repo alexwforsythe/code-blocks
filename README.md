@@ -84,40 +84,6 @@ Keyboard events in the active document cannot currently be handled by Docs
 add-ons:
 https://issuetracker.google.com/issues/79461369
 
-# Contributing
-
-## Setup
-
-```
-$ npm install
-```
-
-## Building
-
-```
-$ npm run build
-```
-
-## Pushing Changes
-
-ℹ️ The following commands only work for the project maintainer
-because they require Google Drive authorization.
-
-| Command | Description |
-| --- | --- |
-| `npm run push:gas` | just GAS files |
-| `npm run push:js` | just `sidebar.js` |
-| `npm run push:static` | just HTML & CSS |
-| `npm run push` | everything |
-
-# Google Apps Script Resources
-
-* https://developers.google.com/apps-script/guides/clasp
-* https://github.com/google/clasp/blob/master/docs/typescript.md
-* https://developers.google.com/apps-script/guides/support/best-practices
-* https://gsuite-developers.googleblog.com/2015/12/advanced-development-process-with-apps.html
-* http://googleappsscript.blogspot.com/2010/06/optimizing-spreadsheet-operations.html
-
 ---
 
 [Homepage](https://www.alexwforsythe.com/code-blocks/) | [Google Workspace Marketplace](https://workspace.google.com/marketplace/app/code_blocks/100740430168) | [Privacy Policy](https://www.alexwforsythe.com/code-blocks/privacy-policy) | [Terms of Service](https://www.alexwforsythe.com/code-blocks/terms-of-service)
