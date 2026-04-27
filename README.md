@@ -12,44 +12,43 @@ permalink: /
   <img alt="Google Workspace Marketplace badge" alt-text="Get it from the Google Workspace Marketplace" src="https://workspace.google.com/static/img/marketplace/en/gwmBadge.svg?" style="height: 68px">
 </a>
 
-# Usage
+## Usage
 
-## Starting the add-on
+### Starting the add-on
 
 ![starting](https://user-images.githubusercontent.com/1639061/68648430-3b709300-04d5-11ea-912f-2e767f37db56.gif)
 
-## Formatting inline code
+### Formatting inline code
 
 ![inline-formatting](https://user-images.githubusercontent.com/1639061/68643446-48d25100-04c6-11ea-96e8-090333e95559.gif)
 
-## Formatting code blocks
+### Formatting code blocks
 
 ![blocks-formatting](https://user-images.githubusercontent.com/1639061/68649759-51338780-04d8-11ea-9e39-5793dec16a4e.gif)
 
-## Reformatting code blocks
+### Reformatting code blocks
 
 ![reformatting-blocks](https://user-images.githubusercontent.com/1639061/68648457-4297a100-04d5-11ea-9787-6e9ecbedfdc1.gif)
 
-## Previewing themes
+### Previewing themes
 
 Examples of the different color themes applied to various languages can be
 found on the [highlight.js demo page](https://highlightjs.org/static/demo/).
 
-## Unformatting code
+### Unformatting code
 
 To clear formatting in Docs, highlight the text and select
 `Format > Clear Formatting` from the toolbar. The keyboard shortcut is
-<kbd>Cmd</kbd>+<kbd>/</kbd> on OS X and <kbd>Ctrl</kbd>+<kbd>/</kbd> on
-Windows:
-https://support.google.com/docs/answer/179738
+<kbd>Cmd</kbd>+<kbd>/</kbd> on OS X and <kbd>Ctrl</kbd>+<kbd>/</kbd> on Windows:
+<https://support.google.com/docs/answer/179738>
 
 This will not remove the table that the text lives in if it's a "code block".
 To do that, you'll have to copy the text and paste it outside the table, then
 right-click the table and select **Delete table**.
 
-# Limitations
+## Limitations
 
-## Updates to syntax highlighting
+### Updates to syntax highlighting
 
 Code Blocks is built with [highlight.js](https://highlightjs.org/) and can only
 provide syntax highlighting for languages that are supported by that library.
@@ -64,7 +63,7 @@ bumps the highlight.js version in [`package.json`](https://github.com/alexwforsy
 2. If highlight.js does not yet include the update, please submit an issue on
 [their issue tracker](https://github.com/highlightjs/highlight.js/issues).
 
-## Real-time syntax highlighting
+### Real-time syntax highlighting
 
 Codes Blocks uses Google's
 [Apps Script](https://developers.google.com/apps-script/), a server-side
@@ -81,11 +80,10 @@ formatting cannot be performed in real-time
 * The number of requests needed to update a Doc in near real-time may exceed
 the service API quotas
 
-## Keyboard Shortcuts
+### Keyboard Shortcuts
 
 Keyboard shortcuts can only be handled by Code Blocks if the add-on sidebar is
 focused, which would require users to click the sidebar anyway.
 
 Keyboard events in the active document cannot currently be handled by Docs
-add-ons:
-https://issuetracker.google.com/issues/79461369
+add-ons: <https://issuetracker.google.com/issues/79461369>
