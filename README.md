@@ -1,3 +1,9 @@
+---
+title:
+layout: home
+permalink: /
+---
+
 ![img](https://repository-images.githubusercontent.com/68638466/d3069380-02d3-11ea-8d09-bb881c87c125)
 
 [![clasp](https://img.shields.io/badge/built%20with-clasp-4285f4.svg)](https://github.com/google/clasp) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/alexwforsythe)
@@ -83,7 +89,3 @@ focused, which would require users to click the sidebar anyway.
 Keyboard events in the active document cannot currently be handled by Docs
 add-ons:
 https://issuetracker.google.com/issues/79461369
-
----
-
-[Homepage](https://www.alexwforsythe.com/code-blocks/) | [Google Workspace Marketplace](https://workspace.google.com/marketplace/app/code_blocks/100740430168) | [Privacy Policy](https://www.alexwforsythe.com/code-blocks/privacy-policy) | [Terms of Service](https://www.alexwforsythe.com/code-blocks/terms-of-service)
