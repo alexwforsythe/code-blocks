@@ -30,5 +30,8 @@
     "push:gas": "npm run build:gas && npm run pushOnly",
     "prepush": "npm run clean && npm run build",
     "push": "npm run pushOnly"
+  },
+  "dependencies": {
+    "highlightjs-solidity": "^1.2.1"
   }
 }
