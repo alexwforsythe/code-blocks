@@ -4,7 +4,7 @@
     "https://www.googleapis.com/auth/documents.currentonly",
     "https://www.googleapis.com/auth/script.container.ui"
   ],
-  "dependencies": {
-  },
-  "exceptionLogging": "STACKDRIVER"
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8"
 }

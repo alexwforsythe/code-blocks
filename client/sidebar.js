@@ -23,11 +23,11 @@ const ids = {
  * Define languages that are not included in highlight.js by default
  */
 function defineThirdPartyGrammars() {
-    const graphql = require("highlightjs-graphql")
-    graphql(hljs)
+    // const graphql = require("highlightjs-graphql")
+    // graphql(hljs)
 }
 
-defineOtherLanguages();
+// defineOtherLanguages();
 
 /**
  * On document load, try to load languages and themes, try to load the user's
