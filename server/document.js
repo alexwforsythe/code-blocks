@@ -327,9 +327,9 @@ function setDocAttr(attrs, prop, val, noBackground) {
         case constants.document.cssAttrs.fontWeight:
         case constants.document.cssAttrs.fontStyle:
         case constants.document.cssAttrs.textDecoration:
-            attrName = constants.document.docAttrs[val];
+            var attrName = constants.document.docAttrs[val];
             if (attrName) {
-                attrs[attrName] = true;
+                attrs[DocumentApp.Attribute[attrName]] = true;
             }
             return;
         case constants.document.cssAttrs.background:
@@ -344,7 +344,7 @@ function setDocAttr(attrs, prop, val, noBackground) {
     // everything else
     var attrName = constants.document.docAttrs[prop];
     if (attrName) {
-        attrs[attrName] = val;
+        attrs[DocumentApp.Attribute[attrName]] = val;
     }
 }
 

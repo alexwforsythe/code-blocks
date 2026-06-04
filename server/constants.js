@@ -21,16 +21,16 @@ var constants = {
          * A map of CSS attributes to document attributes.
          */
         docAttrs: {
-            background: DocumentApp.Attribute.BACKGROUND_COLOR,
-            bold: DocumentApp.Attribute.BOLD,
-            bolder: DocumentApp.Attribute.BOLD,
-            '700': DocumentApp.Attribute.BOLD, // juice transforms bold to 700
+            background: 'BACKGROUND_COLOR',
+            bold: 'BOLD',
+            bolder: 'BOLD',
+            '700': 'BOLD', // juice transforms bold to 700
             normal: undefined, // to reset bold
             '400': undefined,
-            color: DocumentApp.Attribute.FOREGROUND_COLOR,
-            italic: DocumentApp.Attribute.ITALIC,
-            'line-through': DocumentApp.Attribute.STRIKETHROUGH,
-            underline: DocumentApp.Attribute.UNDERLINE
+            color: 'FOREGROUND_COLOR',
+            italic: 'ITALIC',
+            'line-through': 'STRIKETHROUGH',
+            underline: 'UNDERLINE'
         },
         cssAttrs: {
             fontWeight: 'font-weight',
