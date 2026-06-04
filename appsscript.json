@@ -1,5 +1,6 @@
 {
   "timeZone": "America/Los_Angeles",
+  "runtimeVersion": "V8",
   "oauthScopes": [
     "https://www.googleapis.com/auth/documents.currentonly",
     "https://www.googleapis.com/auth/script.container.ui"

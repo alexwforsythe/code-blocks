@@ -85,6 +85,9 @@ function replaceSelection(selection, html, noBackground) {
     var document = DocumentApp.getActiveDocument();
     var body = document.getBody();
 
+    if (!html) return;
+    html = html.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+    html = html.replace(/&nbsp;/g, '&#160;');
     var block = XmlService.parse(html);
     var root = block.getRootElement();
 

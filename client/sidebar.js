@@ -27,7 +27,7 @@ function defineThirdPartyGrammars() {
     graphql(hljs)
 }
 
-defineOtherLanguages();
+defineThirdPartyGrammars();
 
 /**
  * On document load, try to load languages and themes, try to load the user's
@@ -232,7 +232,8 @@ function createHighlightedBlock(text, css, language, noBackground) {
         highlighted = juice.inlineContent(highlighted, css, params);
     }
 
-    block = $($.parseHTML(highlighted));
+    highlighted = $.trim(highlighted);
+    block = $($.parseHTML(highlighted)).filter(function() { return this.nodeType === 1; });
     if (noBackground) {
         block.css('background', defaultBgc);
     }
