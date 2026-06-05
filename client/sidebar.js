@@ -232,8 +232,8 @@ function createHighlightedBlock(text, css, language, noBackground) {
         highlighted = juice.inlineContent(highlighted, css, params);
     }
 
-    highlighted = $.trim(highlighted);
-    block = $($.parseHTML(highlighted)).filter(function() { return this.nodeType === 1; });
+    highlighted = highlighted.replace(/^[\uFEFF]+|[\uFEFF]+$/g, '');
+    block = $($.parseHTML(highlighted)).filter(function() { return this.nodeType === 1; }).first();
     if (noBackground) {
         block.css('background', defaultBgc);
     }

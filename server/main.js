@@ -114,7 +114,7 @@ function insertCodeOrGetSelectionAndThemeCss(html, prefs) {
     var selection = getSelection();
     var selectedText = getTextFromSelection(selection);
 
-    var hasValidHtml = html && html.indexOf('class="hljs') !== -1;
+    var hasValidHtml = html && /class=["'][^"']*?\bhljs\b/i.test(html);
 
     if (hasValidHtml && alreadySelected(selectedText) && alreadySaved(prefs)) {
         // the selection hasn't changed since the last preview,
