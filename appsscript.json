@@ -7,5 +7,16 @@
   ],
   "dependencies": {
   },
-  "exceptionLogging": "STACKDRIVER"
+  "exceptionLogging": "STACKDRIVER",
+  "addOns": {
+    "common": {
+      "name": "New Code Blocks",
+      "logoUrl": "https://www.gstatic.com/images/icons/material/system/1x/code_black_48dp.png"
+    },
+    "docs": {
+      "homepageTrigger": {
+        "runFunction": "onOpen"
+      }
+    }
+  }
 }

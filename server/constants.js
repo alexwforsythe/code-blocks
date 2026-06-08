@@ -1,5 +1,5 @@
 var constants = {
-    title: 'Code Blocks',
+    title: 'New Code Blocks',
     cache: {
         ttl: 14400, // in seconds
         previewText: 'preview_text'
