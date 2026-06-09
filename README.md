@@ -16,19 +16,19 @@ permalink: /
 
 ### Starting the add-on
 
-![starting](assets/images/code-blocks-format-block.gif)
+![starting](assets/images/screenshot-format-block.gif)
 
 ### Formatting inline code
 
-![inline-formatting](assets/images/code-blocks-format-inline.gif)
+![inline-formatting](assets/images/screenshot-format-inline.gif)
 
 ### Formatting code blocks
 
-![blocks-formatting](assets/images/code-blocks-format-block.gif)
+![blocks-formatting](assets/images/screenshot-format-block.gif)
 
 ### Reformatting code blocks
 
-![reformatting-blocks](assets/images/code-blocks-reformat-block.gif)
+![reformatting-blocks](assets/images/screenshot-reformat-block.gif)
 
 ### Previewing themes
 
