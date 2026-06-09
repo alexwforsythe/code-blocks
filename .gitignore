@@ -1,5 +1,5 @@
 .clasp.json
 .nvmrc
-.idea/
+.DS_Store
 node_modules/
 dist/
