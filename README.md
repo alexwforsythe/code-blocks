@@ -4,7 +4,7 @@ layout: home
 permalink: /
 ---
 
-![promo-image](assets/images/promo-marquee.gif)
+![promo-image](assets/images/promo-marquee.png)
 
 [![clasp](https://img.shields.io/badge/built%20with-clasp-4285f4.svg)](https://github.com/google/clasp) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/alexwforsythe)
 
