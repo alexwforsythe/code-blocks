@@ -6,7 +6,7 @@ permalink: /
 
 ![promo-image](assets/images/promo-marquee.png)
 
-[![clasp](https://img.shields.io/badge/built%20with-clasp-4285f4.svg)](https://github.com/google/clasp) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/alexwforsythe)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/alexwforsythe)
 
 <a href="https://workspace.google.com/marketplace/app/code_blocks/100740430168?pann=b" target="_blank" aria-label="Get it from the Google Workspace Marketplace">
   <img alt="Google Workspace Marketplace badge" alt-text="Get it from the Google Workspace Marketplace" src="https://workspace.google.com/static/img/marketplace/en/gwmBadge.svg?" style="height: 68px">
