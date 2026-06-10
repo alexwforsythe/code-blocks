@@ -37,7 +37,7 @@ found on the [highlight.js demo page](https://highlightjs.org/static/demo/).
 
 ### Unformatting code
 
-To clear formatting in Docs, highlight the text and select
+To clear formatting in a doc, highlight the text and select
 `Format > Clear Formatting` from the toolbar. The keyboard shortcut is
 <kbd>Cmd</kbd>+<kbd>/</kbd> on OS X and <kbd>Ctrl</kbd>+<kbd>/</kbd> on Windows:
 <https://support.google.com/docs/answer/179738>
@@ -66,24 +66,26 @@ bumps the highlight.js version in [`package.json`](https://github.com/alexwforsy
 ### Real-time syntax highlighting
 
 Codes Blocks uses Google's
-[Apps Script](https://developers.google.com/apps-script/), a server-side
-JavaScript platform, to interact with Docs and format code. Each time the add-on
-formats a snippet of code, a request is made to the Apps Script backend to
-modify the current Doc. There are a few limitations of this platform that
+[Apps Script](https://developers.google.com/apps-script/)™, a server-side
+JavaScript platform, to interact with Docs™ and format code. Each time the
+add-on formats a snippet of code, a request is made to the apps script backend
+to modify the current doc. There are a few limitations of this platform that
 prevent Code Blocks from formatting code as you type:
-* The [`onEdit`](https://developers.google.com/apps-script/guides/triggers#onedite)
-event that fires when a user modifies content is only available in Sheets
-* [Time-driven triggers](https://developers.google.com/apps-script/guides/triggers/installable#time-driven_triggers)
-can only be used once per hour at most
-* Each request to modify the current Doc can take multiple seconds, so code
-formatting cannot be performed in real-time
-* The number of requests needed to update a Doc in near real-time may exceed
-the service API quotas
+
+- The
+  [`onEdit`](https://developers.google.com/apps-script/guides/triggers#onedite)
+  event that fires when a user modifies content is only available in Sheets™
+- [Time-driven triggers](https://developers.google.com/apps-script/guides/triggers/installable#time-driven_triggers)
+  can only be used once per hour at most
+- Each request to modify the current doc can take multiple seconds, so code
+  formatting cannot be performed in real-time
+- The number of requests needed to update a doc in near real-time may exceed the
+  service API quotas
 
 ### Keyboard Shortcuts
 
 Keyboard shortcuts can only be handled by Code Blocks if the add-on sidebar is
 focused, which would require users to click the sidebar anyway.
 
-Keyboard events in the active document cannot currently be handled by Docs
+Keyboard events in the active document cannot currently be handled by Docs™
 add-ons: <https://issuetracker.google.com/issues/79461369>
