@@ -1,11 +1,16 @@
 {
   "timeZone": "America/Los_Angeles",
+  "addOns": {
+    "common": {
+      "name": "Code Blocks",
+      "logoUrl": "https://www.alexwforsythe.com/code-blocks/assets/images/logo.svg"
+    }
+  },
   "oauthScopes": [
     "https://www.googleapis.com/auth/documents.currentonly",
     "https://www.googleapis.com/auth/script.container.ui"
   ],
-  "dependencies": {
-  },
+  "dependencies": {},
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8"
 }
