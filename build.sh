@@ -34,6 +34,10 @@ css () {
     # wrap every highlight.js theme in a <style id="theme-name"> and bundle
     # them into one html file that the add-on parses at runtime
     echo "<html>" > "${output_file}"
+    # specialComments:0 strips ALL css comments - several highlight.js theme
+    # headers contain things like `<foo@bar.com>` which would otherwise make
+    # styles.html invalid XML and break XmlService.parse() in loadThemes()
+    css_opts='optimizeBackground:off;replaceMultipleZeros:off;specialComments:0'
     for filename in node_modules/highlight.js/styles/*.css; do
         case "${filename}" in
             *.min.css) continue ;;
@@ -41,11 +45,20 @@ css () {
 
         theme_name=$(basename "${filename}" .css)
         theme="<style id=\"${theme_name}\">"
-        theme+=$(cleancss -O0 "${filename}")
+        theme+=$(cleancss -O1 "${css_opts}" "${filename}")
         theme+="</style>"
         echo "${theme}" >> "${output_file}"
     done
     echo "</html>" >> "${output_file}"
+
+    # guard against a future theme reintroducing markup that XmlService.parse
+    # would choke on (a bare '<' or an unescaped '&')
+    stray=$(sed -E 's#</?(style|html)[^>]*>##g' "${output_file}" \
+        | perl -ne 'print "$.\n" if /<|&(?!amp;|lt;|gt;|quot;|apos;|#)/')
+    if [ -n "${stray}" ]; then
+        echo "css: ${output_file} has stray '<' or '&' (line ${stray}) - XmlService.parse will fail" >&2
+        exit 1
+    fi
 }
 
 case "${1:-}" in

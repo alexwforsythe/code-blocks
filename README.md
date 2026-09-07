@@ -93,3 +93,82 @@ focused, which would require users to click the sidebar anyway.
 
 Keyboard events in the active document cannot currently be handled by Docs™
 add-ons: <https://issuetracker.google.com/issues/79461369>
+
+## Running a local copy
+
+You can build the add-on from source and install it in your own Google
+account for testing, without publishing it to the Marketplace. It runs as an
+unpublished [Editor Add-on test deployment][test-editor-addon], visible only
+to the account that owns the script.
+
+[test-editor-addon]: https://developers.google.com/workspace/add-ons/how-tos/testing-editor-addons
+
+### Prerequisites
+
+- Node.js 22 (`.node-version`)
+- A Google account, with the Apps Script API turned on at
+  <https://script.google.com/home/usersettings>
+
+### First-time setup
+
+```sh
+npm ci
+npx clasp login                 # authorises clasp for your Google account
+
+npm run build                   # generates dist/
+npx clasp create --type standalone --title "Code Blocks (dev)"
+```
+
+`clasp create` writes a `.clasp.json` (git-ignored). Make sure it is in the
+**repo root**, not in `dist/`, and that it points the push at `dist/`:
+
+```json
+{
+  "scriptId": "<your script id>",
+  "rootDir": "dist"
+}
+```
+
+### Push the build
+
+```sh
+npm run push
+```
+
+`push` rebuilds `dist/` and runs `clasp push`. It stops on a prompt –
+*"Manifest file has been updated. Do you want to push and overwrite?"* –
+answer `y`. To skip the prompt, run `npx clasp push -f`.
+
+### Install it as a test add-on
+
+1. `npx clasp open` to open the project in the Apps Script editor.
+2. **Deploy ▸ Test deployments**, choose **Editor Add-on** in the left list.
+3. Scroll to the *Editor Add-on* section and click **Create a test**:
+   - **Code**: `Latest Code`
+   - **Test document**: pick an existing Doc, or create a new one
+4. **Save**, then **Install** on the test row.
+5. Open the test document. **Extensions ▸ Code Blocks (dev) ▸ Start** and
+   approve the "unverified app" consent screen (it's your own script).
+
+> **Sign in with one account only.** Apps Script cannot resolve add-on
+> authorisation when several Google accounts are signed into the browser, and
+> the add-on fails with `ScriptError: Exception: Action not allowed`. Use an
+> Incognito window, or a browser profile, with just the account that owns the
+> script. See [issue #167](https://github.com/alexwforsythe/code-blocks/issues/167).
+
+### Iterate
+
+```sh
+npm test          # unit tests (node --test)
+npm run push      # rebuild + upload; answer y to the manifest prompt
+```
+
+Test deployments always run *Latest Code*, so just reload the document after
+a push.
+
+### Where errors show up
+
+- **Apps Script editor ▸ Executions** – server-side runs and `console.error`
+  output.
+- **Sidebar dev tools** – right-click inside the Code Blocks sidebar ▸
+  *Inspect* ▸ *Console* for client-side errors.
