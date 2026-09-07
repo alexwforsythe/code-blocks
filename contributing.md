@@ -18,6 +18,16 @@ npm install
 npm run build
 ```
 
+## Testing
+
+```sh
+npm test
+```
+
+Unit tests use the built-in Node test runner (`node --test`, Node 22+) and
+have no extra dependencies. The server files are loaded into a `node:vm`
+sandbox with stubbed Google services (see `test/helpers/gas.js`).
+
 ## Pushing changes
 
 ℹ️ The following commands only work for the project maintainer because they
