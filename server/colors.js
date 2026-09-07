@@ -1,60 +1,135 @@
-var rgbPattern = /^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i;
+// rgb() / rgba() with an optional, ignored alpha channel
+var rgbPattern =
+    /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*[\d.]+\s*)?\)$/i;
+// hsl() / hsla() with an optional, ignored alpha channel
+var hslPattern =
+    /^hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*(?:,\s*[\d.]+\s*)?\)$/i;
 
 /**
- * Converts a color of type RGB or any variety of hex to a hex string
- * representation of that color. This function is used to get hex colors to
- * use in HTML tags.
+ * Converts a CSS color to a six-digit hex string for use in document
+ * attributes. Understands #rgb, #rgba, #rrggbb, #rrggbbaa, rgb(), rgba(),
+ * hsl(), hsla() and named colors. Any alpha channel is dropped.
  *
- * @param {string} color as RGB or hex
- * @returns {string} color as six-digit hex, e.g. #0000ff
+ * @param {string} color a CSS color value
+ * @returns {?string} color as six-digit hex (e.g. #0000ff), or null if it
+ *     can't be represented as an opaque hex color (e.g. 'transparent', an
+ *     unknown keyword, or a malformed value)
  */
 function colorToHex(color) {
-    color = color.toString();
+    color = color.toString().trim();
+    var lower = color.toLowerCase();
 
-    var start = color.indexOf('#');
-    if (start !== -1) {
-        color = color.slice(start);
-        if (color.length === 7) {
-            return color;
-        }
-
-        color = color.substr(0, 7);
-        return padHex(color);
+    var hashStart = color.indexOf('#');
+    if (hashStart !== -1) {
+        return hexToSixDigit(color.slice(hashStart));
     }
 
-    var rgb = color.match(rgbPattern);
+    var rgb = lower.match(rgbPattern);
     if (rgb) {
-        color = rgb.slice(1, 4).reduce(function toBase16(result, i) {
-            return result + parseInt(i, 10).toString(16);
-        }, '');
-
-        return padHex(color);
+        return channelsToHex([
+            parseInt(rgb[1], 10),
+            parseInt(rgb[2], 10),
+            parseInt(rgb[3], 10)
+        ]);
     }
 
-    return colors[color];
+    var hsl = lower.match(hslPattern);
+    if (hsl) {
+        return channelsToHex(hslToRgb(
+            parseFloat(hsl[1]), parseFloat(hsl[2]), parseFloat(hsl[3])
+        ));
+    }
+
+    if (Object.prototype.hasOwnProperty.call(colors, lower)) {
+        return colors[lower];
+    }
+
+    return null;
 }
 
 /**
- * @param {string} hex color as hex
- * @returns {string} color as six-digit hex, e.g. #0000ff
+ * Normalizes any hex color (with or without leading '#', 3/4/6/8 digits) to
+ * six-digit '#rrggbb', dropping a 4th/8th alpha nibble.
+ *
+ * @param {string} hex
+ * @returns {?string} six-digit hex, or null if the value isn't valid hex
  */
-function padHex(hex) {
-    if (hex.indexOf('#') === 0) {
-        hex = hex.slice(1);
+function hexToSixDigit(hex) {
+    hex = hex.replace('#', '').toLowerCase();
+
+    if (hex.length === 4) {
+        hex = hex.slice(0, 3); // #rgba -> #rgb
+    } else if (hex.length === 8) {
+        hex = hex.slice(0, 6); // #rrggbbaa -> #rrggbb
     }
 
     if (hex.length === 3) {
-        // this is a thing:
         // https://en.wikipedia.org/wiki/Web_colors#Shorthand_hexadecimal_form
-        var expanded = hex.split('').reduce(function expand(result, c) {
-            return result + c + c;
-        }, '');
-
-        return '#' + expanded;
+        hex = hex.charAt(0) + hex.charAt(0) +
+            hex.charAt(1) + hex.charAt(1) +
+            hex.charAt(2) + hex.charAt(2);
     }
 
-    var zeros = new Array(6 - hex.length + 1).join('0');
-    return '#' + zeros + hex;
+    return /^[0-9a-f]{6}$/.test(hex) ? '#' + hex : null;
+}
+
+/**
+ * @param {Array.<number>} channels [r, g, b], each 0-255
+ * @returns {string} six-digit hex, each channel zero-padded to two digits
+ */
+function channelsToHex(channels) {
+    var hex = channels.reduce(function toHexByte(result, n) {
+        n = Math.max(0, Math.min(255, Math.round(n)));
+        var s = n.toString(16);
+        return result + (s.length === 1 ? '0' + s : s);
+    }, '');
+
+    return '#' + hex;
+}
+
+/**
+ * @param {number} h hue in degrees (0-360)
+ * @param {number} s saturation percentage (0-100)
+ * @param {number} l lightness percentage (0-100)
+ * @returns {Array.<number>} [r, g, b], each 0-255
+ */
+function hslToRgb(h, s, l) {
+    h = ((h % 360) + 360) % 360 / 360;
+    s = s / 100;
+    l = l / 100;
+
+    if (s === 0) {
+        var gray = Math.round(l * 255);
+        return [gray, gray, gray];
+    }
+
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    var p = 2 * l - q;
+
+    return [
+        hueToChannel(p, q, h + 1 / 3),
+        hueToChannel(p, q, h),
+        hueToChannel(p, q, h - 1 / 3)
+    ];
+}
+
+function hueToChannel(p, q, t) {
+    if (t < 0) {
+        t += 1;
+    }
+    if (t > 1) {
+        t -= 1;
+    }
+    if (t < 1 / 6) {
+        return Math.round((p + (q - p) * 6 * t) * 255);
+    }
+    if (t < 1 / 2) {
+        return Math.round(q * 255);
+    }
+    if (t < 2 / 3) {
+        return Math.round((p + (q - p) * (2 / 3 - t) * 6) * 255);
+    }
+    return Math.round(p * 255);
 }
 
 var colors = {
@@ -171,6 +246,7 @@ var colors = {
     plum: '#dda0dd',
     powderblue: '#b0e0e6',
     purple: '#800080',
+    rebeccapurple: '#663399',
     red: '#ff0000',
     rosybrown: '#bc8f8f',
     royalblue: '#4169e1',

@@ -38,6 +38,21 @@ var constants = {
             textDecoration: 'text-decoration',
             background: 'background',
             color: 'color'
+        },
+        /**
+         * CSS values that reset a font style rather than enabling one.
+         */
+        styleResets: ['normal', '400', 'none'],
+        /**
+         * The document attribute(s) a reset clears, keyed by CSS property.
+         */
+        styleResetAttrs: {
+            'font-weight': DocumentApp.Attribute.BOLD,
+            'font-style': DocumentApp.Attribute.ITALIC,
+            'text-decoration': [
+                DocumentApp.Attribute.UNDERLINE,
+                DocumentApp.Attribute.STRIKETHROUGH
+            ]
         }
     }
 };

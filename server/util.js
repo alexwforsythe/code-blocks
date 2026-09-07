@@ -1,8 +1,5 @@
 /**
- * @returns {Object} The user's preferences, if they exist.
- */
-/**
- * @returns {Object} the users's preferences
+ * @returns {Object} the user's preferences, if they exist
  */
 function getUserPrefs() {
     try {
@@ -26,7 +23,14 @@ function getUserPrefs() {
  * @param {boolean} prefs.noBackground
  */
 function saveUserPrefs(prefs) {
-    PropertiesService.getUserProperties().setProperties(prefs);
+    // Properties store strings only; persist just the known keys.
+    PropertiesService.getUserProperties().setProperties({
+        language: String(prefs.language),
+        theme: String(prefs.theme),
+        noBackground: String(
+            prefs.noBackground === true || prefs.noBackground === 'true'
+        )
+    });
 }
 
 /**
@@ -53,7 +57,7 @@ function alreadySaved(prefs) {
  */
 function alreadySelected(selectedText) {
     var userCache = CacheService.getUserCache();
-    var previewTextDigest = userCache.get(constants.cache.previewText);
+    var previewTextDigest = userCache.get(previewTextCacheKey());
     previewTextDigest = JSON.parse(previewTextDigest);
     if (previewTextDigest) {
         var selectedTextDigest = Utilities.computeDigest(
@@ -74,7 +78,17 @@ function cacheSelection(selectedText) {
         Utilities.DigestAlgorithm.MD5, selectedText
     );
     var hashVal = JSON.stringify(hash);
-    userCache.put(constants.cache.previewText, hashVal);
+    userCache.put(previewTextCacheKey(), hashVal);
+}
+
+/**
+ * @returns {string} the user-cache key for the last previewed selection,
+ *     scoped to the active document so a preview in one doc can't be mistaken
+ *     for a preview in another
+ */
+function previewTextCacheKey() {
+    return constants.cache.previewText + '_' +
+        DocumentApp.getActiveDocument().getId();
 }
 
 /**
@@ -186,5 +200,7 @@ function arraysAreEqual(lhs, rhs) {
 }
 
 function logError(msg, err) {
-    Logger.log(msg + ': %s', err);
+    // console.* integrates with Cloud Logging / Error Reporting for a
+    // published add-on; Logger.log output is not retained there.
+    console.error(msg + ':', (err && err.stack) || err);
 }
