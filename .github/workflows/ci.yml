@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Check build output
+        run: |
+          test -s dist/appsscript.json
+          test -s dist/bundle.min.js.html
+          test -s dist/styles.html
+          grep -q 'id="default"' dist/styles.html
+          version=$(node -p "require('./package.json').version")
+          grep -q "v${version}" dist/sidebar.html
+          sed '1d;$d' dist/bundle.min.js.html > /tmp/bundle.js
+          node --check /tmp/bundle.js

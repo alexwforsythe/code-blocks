@@ -18,10 +18,13 @@ function getSelection() {
 
     // if the cursor is already in a cell, just select it for the user
     var document = DocumentApp.getActiveDocument();
-    var container = document
-        .getCursor()
-        .getElement()
-        .getParent();
+    var cursor = document.getCursor();
+    if (!cursor) {
+        // no selection and no text cursor (e.g. focus is on an image or the
+        // sidebar) - nothing we can act on
+        throw constants.errors.selectText;
+    }
+    var container = cursor.getElement().getParent();
 
     if (!isCell(container)) {
         container = container.getParent();
@@ -58,16 +61,21 @@ function getTextFromSelection(selection) {
                 var startIndex = e.getStartOffset();
                 var endIndex = e.getEndOffsetInclusive();
                 return text.slice(startIndex, endIndex + 1);
-            } else if (element.editAsText) {
+            }
+            if (element.editAsText) {
                 return text;
             }
+            // range element with no editable text (e.g. an inline image)
+            return null;
+        }).filter(function (piece) {
+            return piece !== null && piece !== undefined;
         });
     } catch (err) {
         logError(constants.errors.getSelection, err);
         throw constants.errors.getSelection;
     }
 
-    if (!result) {
+    if (!result.length) {
         throw constants.errors.selectText;
     }
 
@@ -203,13 +211,12 @@ function insertHtmlAsCell(element, root, noBackground) {
         }
     }
 
-    // set cell background color
+    // set cell background color (extendFromStyle already resolves it to hex)
     if (!noBackground) {
         var rootStyle = root.getAttribute('style');
         var rootAttrs = extendFromStyle({}, rootStyle);
         var rootBgc = rootAttrs[DocumentApp.Attribute.BACKGROUND_COLOR];
         if (rootBgc) {
-            rootBgc = colorToHex(rootBgc);
             cell.setBackgroundColor(rootBgc);
         }
     }
@@ -220,7 +227,10 @@ function insertHtmlAsCell(element, root, noBackground) {
     // clean up cell (remove initial paragraph)
     cell.getChild(0).removeFromParent();
 
-    return table;
+    // `table` is only set when we insert a new one above; when we reused an
+    // existing cell, report the table that cell lives in so callers can still
+    // locate it in the body
+    return table || cell.getParentTable();
 }
 
 /**
@@ -320,31 +330,57 @@ function extendFromStyle(oldAttrs, style, noBackground) {
  * @param {boolean} noBackground
  */
 function setDocAttr(attrs, prop, val, noBackground) {
+    var cssAttrs = constants.document.cssAttrs;
+
     // handle special cases
     // noinspection FallThroughInSwitchStatementJS
     switch (prop) {
-        // font style
-        case constants.document.cssAttrs.fontWeight:
-        case constants.document.cssAttrs.fontStyle:
-        case constants.document.cssAttrs.textDecoration:
-            attrName = constants.document.docAttrs[val];
-            if (attrName) {
-                attrs[attrName] = true;
-            }
+        // font style: boolean attributes, or an explicit reset
+        case cssAttrs.fontWeight:
+        case cssAttrs.fontStyle:
+        case cssAttrs.textDecoration:
+            setFontStyleAttr(attrs, prop, val);
             return;
-        case constants.document.cssAttrs.background:
+        case cssAttrs.background:
             if (noBackground) {
                 return;
             }
-        case constants.document.cssAttrs.color:
+        // falls through: background and color are both resolved to hex
+        case cssAttrs.color:
             val = colorToHex(val);
             break;
     }
 
-    // everything else
     var attrName = constants.document.docAttrs[prop];
-    if (attrName) {
+    if (attrName && val != null) {
         attrs[attrName] = val;
+    }
+}
+
+/**
+ * Applies a font-weight / font-style / text-decoration declaration. Values
+ * that turn a style on (e.g. 'bold', 'italic', 'underline') set the matching
+ * boolean attribute to true; values that reset it ('normal', '400', 'none')
+ * set it to false so an inherited style doesn't carry over.
+ *
+ * @param {Object} attrs
+ * @param {string} prop the CSS property name
+ * @param {string} val the CSS value, already lower-cased
+ */
+function setFontStyleAttr(attrs, prop, val) {
+    if (constants.document.styleResets.indexOf(val) !== -1) {
+        var toClear = constants.document.styleResetAttrs[prop] || [];
+        [].concat(toClear).forEach(function (attrName) {
+            if (attrName) {
+                attrs[attrName] = false;
+            }
+        });
+        return;
+    }
+
+    var attrName = constants.document.docAttrs[val];
+    if (attrName) {
+        attrs[attrName] = true;
     }
 }
 

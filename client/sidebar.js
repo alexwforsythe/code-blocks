@@ -3,6 +3,7 @@
 var $ = require('jquery');
 var hljs = require('highlight.js');
 var juice = require('juice/client');
+var replaceSpecialChars = require('./replacements').replaceSpecialChars;
 
 const defaultBgc = '#f0f0f0';
 const languageAuto = 'Auto';
@@ -218,7 +219,7 @@ function createHighlightedBlock(text, css, language, noBackground) {
     }
 
     const node = block[0];
-    hljs.highlightBlock(node);
+    hljs.highlightElement(node);
 
     var highlighted = block.prop('outerHTML');
     if (css) {
@@ -281,38 +282,3 @@ function showError(msg, elementId) {
     $(elementId).after(div);
 }
 
-/**
- *
- * @param {string} text
- * @returns {string} the text with special characters replaced
- */
-function replaceSpecialChars(text) {
-    var re = new RegExp(Object.keys(replacements).join('|'), 'g');
-    return text.replace(re, function getReplacement(match) {
-        return replacements[match];
-    });
-}
-
-const replacements = {
-    '\u2018': '\'',
-    '\u2019': '\'',
-    '\u201A': '\'',
-    '\uFFFD': '\'',
-    '\u201c': '"',
-    '\u201d': '"',
-    '\u201e': '"',
-    '\u02C6': '^',
-    '\u2039': '<',
-    '\u203A': '>',
-    '\u2013': '-',
-    '\u2014': '--',
-    '\u2026': '...',
-    '\u00A9': '(c)',
-    '\u00AE': '(r)',
-    '\u2122': 'TM',
-    '\u00BC': '1/4',
-    '\u00BD': '1/2',
-    '\u00BE': '3/4',
-    '\u02DC': ' ',
-    '\u00A0': ' '
-};

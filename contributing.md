@@ -18,10 +18,22 @@ npm install
 npm run build
 ```
 
+## Testing
+
+```sh
+npm test
+```
+
+Unit tests use the built-in Node test runner (`node --test`, Node 22+) and
+have no extra dependencies. The server files are loaded into a `node:vm`
+sandbox with stubbed Google services (see `test/helpers/gas.js`).
+
 ## Pushing changes
 
-ℹ️ The following commands only work for the project maintainer because they
-require Google Drive authorization.
+Each command pushes to the script project configured in `.clasp.json`. Run
+`clasp login` first, and `clasp create` once to make your own project (see
+[Running a local copy](README.md#running-a-local-copy) for the full flow,
+including installing it as a test add-on).
 
 | Command               | Description       |
 | --------------------- | ----------------- |

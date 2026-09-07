@@ -27,7 +27,6 @@ function onInstall(e) {
  */
 function showSidebar() {
     var ui = HtmlService.createTemplateFromFile('sidebar').evaluate()
-        .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setTitle(constants.title);
 
     DocumentApp.getUi().showSidebar(ui);
