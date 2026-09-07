@@ -219,7 +219,7 @@ function createHighlightedBlock(text, css, language, noBackground) {
     }
 
     const node = block[0];
-    hljs.highlightBlock(node);
+    hljs.highlightElement(node);
 
     var highlighted = block.prop('outerHTML');
     if (css) {
