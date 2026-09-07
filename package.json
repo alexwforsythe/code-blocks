@@ -19,6 +19,8 @@
     "uglifyify": "5.0.2"
   },
   "scripts": {
+    "test": "node --test",
+    "test:watch": "node --test --watch",
     "clean": "rm -rf dist/*",
     "build:gas": "./build.sh gas",
     "build:js": "./build.sh js",
